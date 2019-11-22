@@ -1803,3 +1803,35 @@ void ClientBeginServerFrame (edict_t *ent)
 
 	client->latched_buttons = 0;
 }
+
+// stuff related to classes below
+
+// enum to keep track of player's current class
+enum class {SCOUT, SOLDIER, PYRO, DEMO, HEAVY} currentClass;
+
+// functions for switching to a given class
+void switchToScout(edict_t* ent) {
+	// set max hp
+	ent->max_health = 125;
+}
+
+void switchToSoldier(edict_t* ent) {
+	// set max hp
+	ent->max_health = 200;
+}
+
+void switchToPyro(edict_t* ent) {
+	// set max hp
+	ent->max_health = 175;
+}
+
+void switchToDemo(edict_t* ent) {
+	// set max hp
+	ent->max_health = 175;
+}
+
+void switchToHeavy(edict_t* ent) {
+	// set max hp
+	ent->max_health = 300;
+}
+
