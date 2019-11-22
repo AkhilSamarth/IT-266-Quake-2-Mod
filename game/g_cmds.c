@@ -912,19 +912,19 @@ void Cmd_SwitchClass_f(edict_t* ent) {
 	char* name = gi.argv(1);
 
 	if (Q_stricmp(name, "scout") == 0) {
-		gi.dprintf("scout test\n");
+		switchToScout(ent);
 	}
 	else if (Q_stricmp(name, "soldier") == 0) {
-		gi.dprintf("solly test\n");
+		switchToSoldier(ent);
 	}
 	else if (Q_stricmp(name, "pyro") == 0) {
-		gi.dprintf("pyro test\n");
+		switchToPyro(ent);
 	}
 	else if (Q_stricmp(name, "demo") == 0) {
-		gi.dprintf("demo test\n");
+		switchToDemo(ent);
 	}
 	else if (Q_stricmp(name, "heavy") == 0) {
-		gi.dprintf("heavy test\n");
+		switchToHeavy(ent);
 	}
 	else {
 		// invalid class name given

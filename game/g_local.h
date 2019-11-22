@@ -814,6 +814,18 @@ void ChaseNext(edict_t *ent);
 void ChasePrev(edict_t *ent);
 void GetChaseTarget(edict_t *ent);
 
+// =============== functions for mod =====================
+
+// p_client.c
+void switchToScout(edict_t* ent);
+void switchToSoldier(edict_t* ent);
+void switchToPyro(edict_t* ent);
+void switchToDemo(edict_t* ent);
+void switchToHeavy(edict_t* ent);
+
+// =============== end functions for mod ===================== 
+
+
 //============================================================================
 
 // client_t->anim_priority

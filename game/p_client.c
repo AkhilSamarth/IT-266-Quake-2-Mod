@@ -1811,27 +1811,42 @@ enum class {SCOUT, SOLDIER, PYRO, DEMO, HEAVY} currentClass;
 
 // functions for switching to a given class
 void switchToScout(edict_t* ent) {
-	// set max hp
+	currentClass = SCOUT;
+
+	// set hp
 	ent->max_health = 125;
+	ent->health = 125;
 }
 
 void switchToSoldier(edict_t* ent) {
-	// set max hp
+	currentClass = SOLDIER;
+
+	// set hp
 	ent->max_health = 200;
+	ent->health = 200;
 }
 
 void switchToPyro(edict_t* ent) {
-	// set max hp
+	currentClass = PYRO;
+
+	// set hp
 	ent->max_health = 175;
+	ent->health = 175;
 }
 
 void switchToDemo(edict_t* ent) {
-	// set max hp
+	currentClass = DEMO;
+
+	// set hp
 	ent->max_health = 175;
+	ent->health = 175;
 }
 
 void switchToHeavy(edict_t* ent) {
-	// set max hp
+	currentClass = HEAVY;
+
+	// set hp
 	ent->max_health = 300;
+	ent->health = 300;
 }
 
