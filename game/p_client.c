@@ -21,7 +21,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "m_player.h"
 
 // enum to keep track of player's current class
-enum class { SCOUT, SOLDIER, PYRO, DEMO, HEAVY } currentClass;
+typedef enum class { NOT_SET, SCOUT, SOLDIER, PYRO, DEMO, HEAVY } class_t;
+class_t currentClass = NOT_SET;
 
 void ClientUserinfoChanged (edict_t *ent, char *userinfo);
 
@@ -1762,6 +1763,11 @@ void ClientBeginServerFrame (edict_t *ent)
 
 	if (level.intermissiontime)
 		return;
+
+	// if class hasn't been set, default to scout
+	if (currentClass == NOT_SET) {
+		switchToScout(ent);
+	}
 
 	client = ent->client;
 
