@@ -1515,15 +1515,7 @@ void weapon_minigun_fire(edict_t *ent)
 	int			damage;
 	int			kick = 2;
 
-	// if spin-up delay hasn't been reached, don't fire (gun is still spinning up)
-	if (level.time - minigunTimer < MINIGUN_SPINUP_DELAY) {
-		return;
-	}
-
-	if (deathmatch->value)
-		damage = 6;
-	else
-		damage = 8;
+	damage = 8;
 
 	if (ent->client->ps.gunframe == 5)
 		gi.sound(ent, CHAN_AUTO, gi.soundindex("weapons/chngnu1a.wav"), 1, ATTN_IDLE, 0);
@@ -1603,6 +1595,13 @@ void weapon_minigun_fire(edict_t *ent)
 		ent->client->kick_origin[i] = crandom() * 0.35;
 		ent->client->kick_angles[i] = crandom() * 0.7;
 	}
+
+	// if spin-up delay hasn't been reached, don't fire (gun is still spinning up)
+	if (level.time - minigunTimer < MINIGUN_SPINUP_DELAY) {
+		return;
+	}
+
+	shots = 1;	// gun should have constant fire rate
 
 	for (i = 0; i<shots; i++)
 	{
