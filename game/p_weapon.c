@@ -1634,7 +1634,7 @@ void Weapon_Minigun(edict_t *ent)
 	static int	fire_frames[] = { 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 0 };
 
 	// if mouse button isn't being pressed, reset timer
-	if (!(ent->client->latched_buttons & BUTTON_ATTACK)) {
+	if (!(ent->client->buttons & BUTTON_ATTACK)) {
 		minigunTimer = level.time;
 	}
 
