@@ -39,6 +39,7 @@ void Weapon_BFG (edict_t *ent);
 // custom weapon think functions
 void Weapon_Scattergun(edict_t* ent);
 void Weapon_Minigun(edict_t* ent);
+void Weapon_Pistol(edict_t* ent);
 
 gitem_armor_t jacketarmor_info	= { 25,  50, .30, .00, ARMOR_JACKET};
 gitem_armor_t combatarmor_info	= { 50, 100, .60, .30, ARMOR_COMBAT};
@@ -2138,7 +2139,7 @@ tank commander's head
 		/* precache */ "weapons/shotgf1b.wav weapons/shotgr1b.wav"
 	},
 
-	{
+	{	// heavy weapon
 		"weapon_minigun",
 		Pickup_Weapon,
 		Use_Weapon,
@@ -2157,6 +2158,27 @@ tank commander's head
 		NULL,
 		0,
 		/* precache */ "weapons/chngnu1a.wav weapons/chngnl1a.wav weapons/machgf3b.wav` weapons/chngnd1a.wav"
+	},
+
+	{	// scout weapon
+		"weapon_pistol",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_Pistol,
+		"misc/w_pkup.wav",
+		"models/weapons/v_blast/tris.md2", EF_ROTATE,
+		"models/weapons/v_blast/tris.md2",
+		/* icon */		"w_blaster",
+		/* pickup */	"Pistol",
+		0,
+		0,
+		"Bullets",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_BLASTER,
+		NULL,
+		0,
+		/* precache */ "weapons/blastf1a.wav misc/lasfly.wav"
 	},
 
 	// =========== end of custom items for mod ===========
