@@ -1438,6 +1438,8 @@ void Weapon_BFG (edict_t *ent)
 float scatterGunTimer;	// timer for scattergun's second shot
 float minigunTimer;		// timer for minigun spin-up time
 
+qboolean pistolFired = false;	// used to make pistol semi-auto instead of automatic
+
 // isSecondFire tells function is this is the scattergun's first or second fire
 void weapon_scattergun_fire(edict_t *ent) {
 	vec3_t		start;
@@ -1632,11 +1634,6 @@ void Weapon_Minigun(edict_t *ent)
 	static int	pause_frames[] = { 38, 43, 51, 61, 0 };
 	static int	fire_frames[] = { 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 0 };
 
-	// if mouse button isn't being pressed, reset timer
-	if (!(ent->client->buttons & BUTTON_ATTACK)) {
-		minigunTimer = level.time;
-	}
-
 	Weapon_Generic(ent, 4, 31, 61, 64, pause_frames, fire_frames, weapon_minigun_fire);
 }
 
@@ -1649,6 +1646,14 @@ void weapon_pistol_fire(edict_t *ent)
 	int			damage = 8;
 	int			kick = 2;
 	vec3_t		offset;
+
+	// if pistol has been fired, don't fire again until boolean is reset
+	if (pistolFired) {
+		return;
+	}
+	else {
+		pistolFired = true;
+	}
 
 	if (!(ent->client->buttons & BUTTON_ATTACK))
 	{

@@ -1563,6 +1563,12 @@ void PrintPmove (pmove_t *pm)
 	Com_Printf ("sv %3i:%i %i\n", pm->cmd.impulse, c1, c2);
 }
 
+// mod vars
+
+// p_weapons.c
+float minigunTimer;
+qboolean pistolFired;
+
 /*
 ==============
 ClientThink
@@ -1744,6 +1750,16 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		other = g_edicts + i;
 		if (other->inuse && other->client->chase_target == ent)
 			UpdateChaseCam(other);
+	}
+
+	// if mouse button isn't being pressed, reset minigun timer
+	if (!(ent->client->buttons & BUTTON_ATTACK)) {
+		minigunTimer = level.time;
+	}
+
+	// if mouse button isn't being pressed, reset pistolFired
+	if (!(ent->client->buttons & BUTTON_ATTACK)) {
+		pistolFired = false;
 	}
 }
 
