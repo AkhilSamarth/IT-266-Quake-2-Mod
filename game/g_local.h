@@ -814,16 +814,17 @@ void ChaseNext(edict_t *ent);
 void ChasePrev(edict_t *ent);
 void GetChaseTarget(edict_t *ent);
 
-// =============== functions for mod =====================
+// =============== stuff for mod =====================
+float scatterGunTimer;	// timer for scattergun's second shot
 
-// p_client.c
+// functions for class switching
 void switchToScout(edict_t* ent);
 void switchToSoldier(edict_t* ent);
 void switchToPyro(edict_t* ent);
 void switchToDemo(edict_t* ent);
 void switchToHeavy(edict_t* ent);
 
-// =============== end functions for mod ===================== 
+// =============== end stuff for mod ===================== 
 
 
 //============================================================================

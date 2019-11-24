@@ -22,6 +22,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 #include "m_player.h"
 
+// delay between first and second shots of scattergun
+#define SCATTERGUN_SECOND_SHOT_DELAY 0.5
 
 static qboolean	is_quad;
 static byte		is_silenced;
@@ -1430,5 +1432,70 @@ void Weapon_BFG (edict_t *ent)
 	Weapon_Generic (ent, 8, 32, 55, 58, pause_frames, fire_frames, weapon_bfg_fire);
 }
 
+// custom weapon functions
 
-//======================================================================
+// isSecondFire tells function is this is the scattergun's first or second fire
+void weapon_scattergun_fire(edict_t *ent) {
+	vec3_t		start;
+	vec3_t		forward, right;
+	vec3_t		offset;
+	int			damage = 4;
+	int			kick = 8;
+
+	if (ent->client->ps.gunframe == 9)
+	{
+		ent->client->ps.gunframe++;
+		return;
+	}
+
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+
+	VectorScale(forward, -2, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -2;
+
+	VectorSet(offset, 0, 8, ent->viewheight - 8);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+
+	if (is_quad)
+	{
+		damage *= 4;
+		kick *= 4;
+	}
+
+	if (deathmatch->value)
+		fire_shotgun(ent, start, forward, damage, kick, 500, 500, DEFAULT_DEATHMATCH_SHOTGUN_COUNT, MOD_SHOTGUN);
+	else
+		fire_shotgun(ent, start, forward, damage, kick, 500, 500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
+
+	// send muzzle flash
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	gi.WriteByte(MZ_SHOTGUN | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	ent->client->ps.gunframe++;
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+	if (!((int)dmflags->value & DF_INFINITE_AMMO))
+		ent->client->pers.inventory[ent->client->ammo_index]--;
+
+	// if the timer is not running, this is the first shot, so start the timer
+	if (scatterGunTimer == 0) {
+		scatterGunTimer = level.time;
+	}
+}
+
+void Weapon_Scattergun(edict_t* ent) {
+	// copied from shotgun code
+	static int	pause_frames[] = { 22, 28, 34, 0 };
+	static int	fire_frames[] = { 8, 9, 0 };
+
+	Weapon_Generic(ent, 7, 18, 36, 39, pause_frames, fire_frames, weapon_scattergun_fire);
+
+	// timer for scattergun second shot
+	if (scatterGunTimer != 0 && level.time - scatterGunTimer >= SCATTERGUN_SECOND_SHOT_DELAY) {
+		// fire again and reset the timer
+		weapon_scattergun_fire(ent);
+		scatterGunTimer = 0;
+	}
+}

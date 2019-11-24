@@ -20,6 +20,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 #include "m_player.h"
 
+// enum to keep track of player's current class
+enum class { SCOUT, SOLDIER, PYRO, DEMO, HEAVY } currentClass;
+
 void ClientUserinfoChanged (edict_t *ent, char *userinfo);
 
 void SP_misc_teleporter_dest (edict_t *ent);
@@ -1805,9 +1808,6 @@ void ClientBeginServerFrame (edict_t *ent)
 }
 
 // stuff related to classes below
-
-// enum to keep track of player's current class
-enum class {SCOUT, SOLDIER, PYRO, DEMO, HEAVY} currentClass;
 
 // functions for switching to a given class
 void switchToScout(edict_t* ent) {
