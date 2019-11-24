@@ -815,7 +815,6 @@ void ChasePrev(edict_t *ent);
 void GetChaseTarget(edict_t *ent);
 
 // =============== stuff for mod =====================
-float scatterGunTimer;	// timer for scattergun's second shot
 
 // functions for class switching
 void switchToScout(edict_t* ent);
