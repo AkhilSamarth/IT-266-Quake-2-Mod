@@ -22,8 +22,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 #include "m_player.h"
 
-// delay between first and second shots of scattergun
-#define SCATTERGUN_SECOND_SHOT_DELAY 0.5
+#define SCATTERGUN_SECOND_SHOT_DELAY 0.5	// delay between first and second shots of scattergun
+#define SCATTERGUN_COUNT 10
 
 static qboolean	is_quad;
 static byte		is_silenced;
@@ -1462,10 +1462,8 @@ void weapon_scattergun_fire(edict_t *ent) {
 		kick *= 4;
 	}
 
-	if (deathmatch->value)
-		fire_shotgun(ent, start, forward, damage, kick, 500, 500, DEFAULT_DEATHMATCH_SHOTGUN_COUNT, MOD_SHOTGUN);
-	else
-		fire_shotgun(ent, start, forward, damage, kick, 500, 500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
+	// shotgun fire function with slightly modified values
+	fire_shotgun(ent, start, forward, damage, kick, 400, 400, SCATTERGUN_COUNT, MOD_SHOTGUN);		// default spread 500
 
 	// send muzzle flash
 	gi.WriteByte(svc_muzzleflash);
