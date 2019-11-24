@@ -1185,7 +1185,7 @@ void weapon_shotgun_fire (edict_t *ent)
 	vec3_t		start;
 	vec3_t		forward, right;
 	vec3_t		offset;
-	int			damage = 4;
+	int			damage = 6;		// higher damage to match TF2
 	int			kick = 8;
 
 	if (ent->client->ps.gunframe == 9)
@@ -1208,10 +1208,8 @@ void weapon_shotgun_fire (edict_t *ent)
 		kick *= 4;
 	}
 
-	if (deathmatch->value)
-		fire_shotgun (ent, start, forward, damage, kick, 500, 500, DEFAULT_DEATHMATCH_SHOTGUN_COUNT, MOD_SHOTGUN);
-	else
-		fire_shotgun (ent, start, forward, damage, kick, 500, 500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
+	// 3x higher spread than default shotgun
+	fire_shotgun (ent, start, forward, damage, kick, 1500, 1500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
