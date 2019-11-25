@@ -779,7 +779,7 @@ void Weapon_RocketLauncher_Fire (edict_t *ent)
 
 	VectorSet(offset, 8, 8, ent->viewheight-8);
 	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
-	fire_rocket (ent, start, forward, damage, 900, damage_radius, radius_damage);	// 3x higher speed than default
+	fire_rocket (ent, start, forward, damage, 900, damage_radius, radius_damage);	// 3x higher speed than default, from 300 to 900
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
