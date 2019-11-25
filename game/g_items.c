@@ -41,6 +41,7 @@ void Weapon_Scattergun(edict_t* ent);
 void Weapon_Minigun(edict_t* ent);
 void Weapon_Pistol(edict_t* ent);
 void Weapon_Bison(edict_t* ent);
+void Weapon_SMG(edict_t* ent);
 
 gitem_armor_t jacketarmor_info	= { 25,  50, .30, .00, ARMOR_JACKET};
 gitem_armor_t combatarmor_info	= { 50, 100, .60, .30, ARMOR_COMBAT};
@@ -2201,6 +2202,27 @@ tank commander's head
 		NULL,
 		0,
 		/* precache */ "weapons/blastf1a.wav misc/lasfly.wav"
+	},
+
+	{	// sniper weapon
+		"weapon_smg",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_SMG,
+		"misc/w_pkup.wav",
+		"models/weapons/g_machn/tris.md2", EF_ROTATE,
+		"models/weapons/v_machn/tris.md2",
+		/* icon */		"w_machinegun",
+		/* pickup */	"SMG",
+		0,
+		1,
+		"Bullets",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_MACHINEGUN,
+		NULL,
+		0,
+		/* precache */ "weapons/machgf1b.wav weapons/machgf2b.wav weapons/machgf3b.wav weapons/machgf4b.wav weapons/machgf5b.wav"
 	},
 
 	// =========== end of custom items for mod ===========
