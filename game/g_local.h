@@ -819,7 +819,7 @@ void GetChaseTarget(edict_t *ent);
 // functions for class switching
 void switchToScout(edict_t* ent);
 void switchToSoldier(edict_t* ent);
-void switchToPyro(edict_t* ent);
+void switchToSniper(edict_t* ent);
 void switchToDemo(edict_t* ent);
 void switchToHeavy(edict_t* ent);
 

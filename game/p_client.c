@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "m_player.h"
 
 // enum to keep track of player's current class
-typedef enum class { NOT_SET, SCOUT, SOLDIER, PYRO, DEMO, HEAVY } class_t;
+typedef enum class { NOT_SET, SCOUT, SOLDIER, SNIPER, DEMO, HEAVY } class_t;
 class_t currentClass = NOT_SET;
 
 void ClientUserinfoChanged (edict_t *ent, char *userinfo);
@@ -1848,8 +1848,8 @@ void switchToSoldier(edict_t* ent) {
 	ent->health = 200;
 }
 
-void switchToPyro(edict_t* ent) {
-	currentClass = PYRO;
+void switchToSniper(edict_t* ent) {
+	currentClass = SNIPER;
 
 	// set hp
 	ent->max_health = 175;

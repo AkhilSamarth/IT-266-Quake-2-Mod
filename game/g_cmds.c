@@ -917,8 +917,8 @@ void Cmd_SwitchClass_f(edict_t* ent) {
 	else if (Q_stricmp(name, "soldier") == 0) {
 		switchToSoldier(ent);
 	}
-	else if (Q_stricmp(name, "pyro") == 0) {
-		switchToPyro(ent);
+	else if (Q_stricmp(name, "sniper") == 0) {
+		switchToSniper(ent);
 	}
 	else if (Q_stricmp(name, "demo") == 0) {
 		switchToDemo(ent);
