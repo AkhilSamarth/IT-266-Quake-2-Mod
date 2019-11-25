@@ -40,6 +40,7 @@ void Weapon_BFG (edict_t *ent);
 void Weapon_Scattergun(edict_t* ent);
 void Weapon_Minigun(edict_t* ent);
 void Weapon_Pistol(edict_t* ent);
+void Weapon_Bison(edict_t* ent);
 
 gitem_armor_t jacketarmor_info	= { 25,  50, .30, .00, ARMOR_JACKET};
 gitem_armor_t combatarmor_info	= { 50, 100, .60, .30, ARMOR_COMBAT};
@@ -2174,6 +2175,27 @@ tank commander's head
 		0,
 		0,
 		"Bullets",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_BLASTER,
+		NULL,
+		0,
+		/* precache */ "weapons/blastf1a.wav misc/lasfly.wav"
+	},
+	
+	{	// soldier weapon
+		"weapon_bison",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_Bison,
+		"misc/w_pkup.wav",
+		"models/weapons/v_blast/tris.md2", EF_ROTATE,
+		"models/weapons/v_blast/tris.md2",
+		/* icon */		"w_blaster",
+		/* pickup */	"Bison",
+		0,
+		0,
+		"Cells",
 		IT_WEAPON | IT_STAY_COOP,
 		WEAP_BLASTER,
 		NULL,
