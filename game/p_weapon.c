@@ -1432,14 +1432,9 @@ void Weapon_BFG (edict_t *ent)
 #define SCATTERGUN_SECOND_SHOT_DELAY 0.5	// delay between first and second shots of scattergun
 #define SCATTERGUN_COUNT 10			// number of projectiles fired by each scattergun shot
 #define MINIGUN_SPINUP_DELAY 0.8	// time before minigun starts firing
-#define BISON_RECHARGE_DELAY 0.5	// time taken for bison to generate one additional ammo in clip
-#define BISON_CLIP_SIZE 4			// highest number of shots that can be held at once
 
 float scatterGunTimer;	// timer for scattergun's second shot
 float minigunTimer;		// timer for minigun spin-up time
-float bisonTimer;		// timer for bison cooldown
-
-int bisonClip = 4;		// number of shots left before cooldown initiates
 
 qboolean pistolFired = false;	// used to make pistol semi-auto instead of automatic
 
@@ -1744,32 +1739,6 @@ void Weapon_Pistol(edict_t *ent)
 	static int	fire_frames[] = { 5, 0 };
 
 	Weapon_Generic(ent, 4, 8, 52, 55, pause_frames, fire_frames, weapon_pistol_fire);
-}
-
-void weapon_bison_fire(edict_t *ent)
-{
-	int		damage;
-
-	damage = 25;	// higher damage than normal blaster
-	
-	// don't fire if there is nothing in the clip
-	if (!bisonClip) {
-		return;
-	}
-	else {
-		bisonClip--;
-	}
-
-	Blaster_Fire(ent, vec3_origin, damage, false, EF_BLASTER);
-	ent->client->ps.gunframe++;
-}
-
-void Weapon_Bison(edict_t *ent)
-{
-	static int	pause_frames[] = { 19, 32, 0 };
-	static int	fire_frames[] = { 5, 0 };
-
-	Weapon_Generic(ent, 4, 8, 52, 55, pause_frames, fire_frames, weapon_bison_fire);
 }
 
 void weapon_SMG_fire(edict_t *ent)
