@@ -1835,9 +1835,19 @@ void ClientBeginServerFrame (edict_t *ent)
 
 // stuff related to classes below
 
+void setSpeed(int speed) {
+	char* speedStr;
+	itoa(speed, speedStr, 10);
+
+	gi.cvar_set("cl_forwardspeed", speedStr);
+	gi.cvar_set("cl_sidespeed", speedStr);
+}
+
 // functions for switching to a given class
 void switchToScout(edict_t* ent) {
 	currentClass = SCOUT;
+
+	setSpeed(400);
 
 	// set hp
 	ent->max_health = 125;
@@ -1847,6 +1857,8 @@ void switchToScout(edict_t* ent) {
 void switchToSoldier(edict_t* ent) {
 	currentClass = SOLDIER;
 
+	setSpeed(150);
+
 	// set hp
 	ent->max_health = 200;
 	ent->health = 200;
@@ -1854,6 +1866,8 @@ void switchToSoldier(edict_t* ent) {
 
 void switchToSniper(edict_t* ent) {
 	currentClass = SNIPER;
+
+	setSpeed(200);
 
 	// set hp
 	ent->max_health = 175;
@@ -1863,6 +1877,8 @@ void switchToSniper(edict_t* ent) {
 void switchToDemo(edict_t* ent) {
 	currentClass = DEMO;
 
+	setSpeed(180);
+
 	// set hp
 	ent->max_health = 175;
 	ent->health = 175;
@@ -1870,6 +1886,8 @@ void switchToDemo(edict_t* ent) {
 
 void switchToHeavy(edict_t* ent) {
 	currentClass = HEAVY;
+
+	setSpeed(100);
 
 	// set hp
 	ent->max_health = 300;
