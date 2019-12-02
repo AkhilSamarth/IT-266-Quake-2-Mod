@@ -1761,6 +1761,10 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 	if (!(ent->client->buttons & BUTTON_ATTACK)) {
 		pistolFired = false;
 	}
+
+	// upgdate global health var
+	playerHealth = ent->health;
+	playerMaxHealth = ent->max_health;
 }
 
 

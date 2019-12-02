@@ -816,6 +816,10 @@ void GetChaseTarget(edict_t *ent);
 
 // =============== stuff for mod =====================
 
+// global player vars
+int playerHealth;
+int playerMaxHealth;
+
 // functions for class switching
 void switchToScout(edict_t* ent);
 void switchToSoldier(edict_t* ent);

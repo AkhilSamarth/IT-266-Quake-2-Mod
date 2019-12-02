@@ -1918,5 +1918,69 @@ void Weapon_SlowDeath(edict_t *ent)
 	Weapon_Generic(ent, 4, 12, 50, 54, pause_frames, fire_frames, weapon_slowdeath_fire);
 }
 
+void weapon_panicattack_fire(edict_t *ent)
+{
+	vec3_t		start;
+	vec3_t		forward, right;
+	vec3_t		offset;
+	int			damage = 6;		// higher damage to match TF2
+	int			kick = 8;
+
+	const int MAX_SPREAD = 5000;
+	const int MIN_SPREAD = 50;
+
+	if (ent->client->ps.gunframe == 9)
+	{
+		ent->client->ps.gunframe++;
+		return;
+	}
+
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+
+	VectorScale(forward, -2, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -2;
+
+	VectorSet(offset, 0, 8, ent->viewheight - 8);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+
+	if (is_quad)
+	{
+		damage *= 4;
+		kick *= 4;
+	}
+
+	// make sure client exists
+	if (!ent->client) {
+		return;
+	}
+
+	// calculate spread based on health
+	// linear function with max hp = max spread and 0 hp = min spread
+	float slope = 1.0f * (MAX_SPREAD - MIN_SPREAD) / playerMaxHealth;
+	int spread = (int) (slope * playerHealth + MIN_SPREAD);
+	
+	fire_shotgun(ent, start, forward, damage, kick, spread, spread, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
+
+	// send muzzle flash
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	gi.WriteByte(MZ_SHOTGUN | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	ent->client->ps.gunframe++;
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+	if (!((int)dmflags->value & DF_INFINITE_AMMO))
+		ent->client->pers.inventory[ent->client->ammo_index]--;
+}
+
+void Weapon_PanicAttack(edict_t *ent)
+{
+	static int	pause_frames[] = { 22, 28, 34, 0 };
+	static int	fire_frames[] = { 8, 9, 0 };
+
+	Weapon_Generic(ent, 7, 18, 36, 39, pause_frames, fire_frames, weapon_panicattack_fire);
+}
+
 
 // ============== end of custom mod stuff ==================
