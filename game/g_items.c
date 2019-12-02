@@ -42,6 +42,8 @@ void Weapon_Minigun(edict_t* ent);
 void Weapon_Pistol(edict_t* ent);
 void Weapon_Bison(edict_t* ent);
 void Weapon_SMG(edict_t* ent);
+void Weapon_SlowDeath(edict_t* ent);
+void Weapon_PanicAttack(edict_t* ent);
 
 gitem_armor_t jacketarmor_info	= { 25,  50, .30, .00, ARMOR_JACKET};
 gitem_armor_t combatarmor_info	= { 50, 100, .60, .30, ARMOR_COMBAT};
@@ -2223,6 +2225,48 @@ tank commander's head
 		NULL,
 		0,
 		/* precache */ "weapons/machgf1b.wav weapons/machgf2b.wav weapons/machgf3b.wav weapons/machgf4b.wav weapons/machgf5b.wav"
+	},
+
+	{	// soldier weapon
+		"weapon_slowdeath",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_SlowDeath,
+		"misc/w_pkup.wav",
+		"models/weapons/g_rocket/tris.md2", EF_ROTATE,
+		"models/weapons/v_rocket/tris.md2",
+		/* icon */		"w_rlauncher",
+		/* pickup */	"Slow Death",
+		0,
+		1,
+		"Rockets",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_ROCKETLAUNCHER,
+		NULL,
+		0,
+		/* precache */ "models/objects/rocket/tris.md2 weapons/rockfly.wav weapons/rocklf1a.wav weapons/rocklr1b.wav models/objects/debris2/tris.md2"
+	},
+
+	{
+		"weapon_panicattack",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_PanicAttack,
+		"misc/w_pkup.wav",
+		"models/weapons/g_shotg/tris.md2", EF_ROTATE,
+		"models/weapons/v_shotg/tris.md2",
+		/* icon */		"w_shotgun",
+		/* pickup */	"Panic Attack",
+		0,
+		1,
+		"Shells",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_SHOTGUN,
+		NULL,
+		0,
+		/* precache */ "weapons/shotgf1b.wav weapons/shotgr1b.wav"
 	},
 
 	// =========== end of custom items for mod ===========

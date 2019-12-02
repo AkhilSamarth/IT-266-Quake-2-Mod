@@ -1870,4 +1870,53 @@ void Weapon_SMG(edict_t *ent)
 	Weapon_Generic(ent, 3, 5, 45, 49, pause_frames, fire_frames, weapon_SMG_fire);
 }
 
+void weapon_slowdeath_fire(edict_t *ent)
+{
+	vec3_t	offset, start;
+	vec3_t	forward, right;
+	int		damage;
+	float	damage_radius;
+	int		radius_damage;
+
+	damage = 1000;		// extremely high damage
+	radius_damage = 500;	// higher knockback too, also means that if you hit it too close to yourself, you'll die
+	damage_radius = 200;	// higher radius
+	if (is_quad)
+	{
+		damage *= 4;
+		radius_damage *= 4;
+	}
+
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+
+	VectorScale(forward, -2, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -1;
+
+	VectorSet(offset, 8, 8, ent->viewheight - 8);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+	fire_rocket(ent, start, forward, damage, 60, damage_radius, radius_damage);	// speed changed from 300 to 60
+
+	// send muzzle flash
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	gi.WriteByte(MZ_ROCKET | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	ent->client->ps.gunframe++;
+
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+	if (!((int)dmflags->value & DF_INFINITE_AMMO))
+		ent->client->pers.inventory[ent->client->ammo_index]--;
+}
+
+void Weapon_SlowDeath(edict_t *ent)
+{
+	static int	pause_frames[] = { 25, 33, 42, 50, 0 };
+	static int	fire_frames[] = { 5, 0 };
+
+	Weapon_Generic(ent, 4, 12, 50, 54, pause_frames, fire_frames, weapon_slowdeath_fire);
+}
+
+
 // ============== end of custom mod stuff ==================
