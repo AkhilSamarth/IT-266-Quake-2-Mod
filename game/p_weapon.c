@@ -1433,11 +1433,16 @@ void Weapon_BFG (edict_t *ent)
 #define SCATTERGUN_SECOND_SHOT_DELAY 0.5	// delay between first and second shots of scattergun
 #define SCATTERGUN_COUNT 10			// number of projectiles fired by each scattergun shot
 #define MINIGUN_SPINUP_DELAY 0.8	// time before minigun starts firing
+#define SNIPER_SCOPE_DELAY 1		// delay between scoping and firing sniper
+#define SNIPER_RESCOPE_DELAY 2		// delay between unscoping and scoping again
 
 float scatterGunTimer;	// timer for scattergun's second shot
 float minigunTimer;		// timer for minigun spin-up time
+float sniperTimer = 0;		// timer for delay between scoping and firing, also between unscoping and rescoping
 
 qboolean pistolFired = false;	// used to make pistol semi-auto instead of automatic
+qboolean sniperScoped = false;	// checks if the sniper is currently scoped
+qboolean sniperFired = false;	// sniper has been fired and is waiting for mouse button to be released
 
 // isSecondFire tells function is this is the scattergun's first or second fire
 void weapon_scattergun_fire(edict_t *ent) {
@@ -1999,13 +2004,50 @@ void weapon_sniper_fire(edict_t *ent)
 		ent->client->pers.inventory[ent->client->ammo_index]--;
 }
 
+// used for sniper, since firing is handled manually
+void dummy_fire(edict_t* ent) {}
 
 void Weapon_Sniper(edict_t *ent)
 {
 	static int	pause_frames[] = { 56, 0 };
 	static int	fire_frames[] = { 4, 0 };
+	
+	// if already fired, wait for mouse button to be released
+	if (sniperFired) {
+		if (!(ent->client->buttons & BUTTON_ATTACK)) {
+			// unscope and reset boolean
+			ent->client->ps.fov = 90;
+			sniperScoped = false;
+			sniperTimer = level.time;
+			sniperFired = false;
+		}
+		// otherwise don't do anything
+		else {
+			return;
+		}
+	}
 
-	Weapon_Generic(ent, 3, 18, 56, 61, pause_frames, fire_frames, weapon_sniper_fire);
+	if (ent->client->buttons & BUTTON_ATTACK) {
+		// check if sniper is scoped and cooldown is done
+		if (!sniperScoped && (level.time - sniperTimer >= SNIPER_RESCOPE_DELAY)) {
+			// scope and reset the timer
+			sniperTimer = level.time;
+			ent->client->ps.fov = 30;
+			sniperScoped = true;
+			return;
+		}
+		// if scoped but delay isn't complete, don't fire
+		else if (level.time - sniperTimer < SNIPER_SCOPE_DELAY) {
+			return;
+		}
+		else {
+			// fire and set boolean
+			weapon_sniper_fire(ent);
+			sniperFired = true;
+		}
+	}
+
+	Weapon_Generic(ent, 3, 18, 56, 61, pause_frames, fire_frames, dummy_fire);
 }
 
 
