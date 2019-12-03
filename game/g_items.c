@@ -43,6 +43,7 @@ void Weapon_Pistol(edict_t* ent);
 void Weapon_SMG(edict_t* ent);
 void Weapon_SlowDeath(edict_t* ent);
 void Weapon_PanicAttack(edict_t* ent);
+void Weapon_Sniper(edict_t* ent);
 
 gitem_armor_t jacketarmor_info	= { 25,  50, .30, .00, ARMOR_JACKET};
 gitem_armor_t combatarmor_info	= { 50, 100, .60, .30, ARMOR_COMBAT};
@@ -2245,6 +2246,27 @@ tank commander's head
 		NULL,
 		0,
 		/* precache */ "weapons/shotgf1b.wav weapons/shotgr1b.wav"
+	},
+
+	{	// sniper weapon
+		"weapon_sniper",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_Sniper,
+		"misc/w_pkup.wav",
+		"models/weapons/g_rail/tris.md2", EF_ROTATE,
+		"models/weapons/v_rail/tris.md2",
+		/* icon */		"w_railgun",
+		/* pickup */	"Sniper Rifle",
+		0,
+		1,
+		"Slugs",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_RAILGUN,
+		NULL,
+		0,
+		/* precache */ "weapons/rg_hum.wav"
 	},
 
 	// =========== end of custom items for mod ===========
