@@ -1858,12 +1858,54 @@ void ClientBeginServerFrame (edict_t *ent)
 
 // stuff related to classes below
 
+// set the player's speed
 void setSpeed(int speed) {
 	char* speedStr;
 	itoa(speed, speedStr, 10);
 
 	gi.cvar_set("cl_forwardspeed", speedStr);
 	gi.cvar_set("cl_sidespeed", speedStr);
+}
+
+// give the player the given weapon
+void giveWeapon(edict_t* ent, char* pickupName) {
+	// copied from Cmd_Give_f and modified to fit here
+	gitem_t* it = FindItem(pickupName);
+	if (!it)
+	{
+		char* name = gi.argv(1);
+		it = FindItem(name);
+		if (!it)
+		{
+			gi.dprintf("unknown item %s supplied in giveWeapon()\n", pickupName);
+			return;
+		}
+	}
+
+	if (!it->pickup)
+	{
+		gi.dprintf("item %s supplied in giveWeapon() is not pickup-able\n", pickupName);
+		return;
+	}
+
+	int index = ITEM_INDEX(it);
+
+	if (it->flags & IT_AMMO)
+	{
+		if (gi.argc() == 3)
+			ent->client->pers.inventory[index] = atoi(gi.argv(2));
+		else
+			ent->client->pers.inventory[index] += it->quantity;
+	}
+	else
+	{
+		edict_t* it_ent = G_Spawn();
+		it_ent->classname = it->classname;
+		SpawnItem(it_ent, it);
+		Touch_Item(it_ent, ent, NULL, NULL);
+		if (it_ent->inuse)
+			G_FreeEdict(it_ent);
+	}
 }
 
 // functions for switching to a given class
@@ -1875,6 +1917,8 @@ void switchToScout(edict_t* ent) {
 	// set hp
 	ent->max_health = HEALTH_SCOUT;
 	ent->health = HEALTH_SCOUT;
+
+	giveWeapon(ent, "Scattergun");
 }
 
 void switchToSoldier(edict_t* ent) {
