@@ -1439,6 +1439,7 @@ void Weapon_BFG (edict_t *ent)
 float scatterGunTimer;	// timer for scattergun's second shot
 float minigunTimer;		// timer for minigun spin-up time
 float sniperTimer = 0;		// timer for delay between scoping and firing, also between unscoping and rescoping
+float escapeTimer;		// timer to see if speed needs to be reset after dequipping escape plan
 
 qboolean pistolFired = false;	// used to make pistol semi-auto instead of automatic
 qboolean sniperScoped = false;	// checks if the sniper is currently scoped
@@ -2060,5 +2061,73 @@ void Weapon_Sniper(edict_t *ent)
 	}
 }
 
+void weapon_escape_plan_fire(edict_t *ent)
+{
+	vec3_t		start;
+	vec3_t		forward, right;
+	vec3_t		offset;
+	int			damage = 1;		// low damage to compensate for higher speed
+	int			kick = 8;
+
+	if (ent->client->ps.gunframe == 9)
+	{
+		ent->client->ps.gunframe++;
+		return;
+	}
+
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+
+	VectorScale(forward, -2, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -2;
+
+	VectorSet(offset, 0, 8, ent->viewheight - 8);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+
+	if (is_quad)
+	{
+		damage *= 4;
+		kick *= 4;
+	}
+
+	fire_shotgun(ent, start, forward, damage, kick, 500, 500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
+
+	// send muzzle flash
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	gi.WriteByte(MZ_SHOTGUN | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	ent->client->ps.gunframe++;
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+	if (!((int)dmflags->value & DF_INFINITE_AMMO))
+		ent->client->pers.inventory[ent->client->ammo_index]--;
+}
+
+void Weapon_EscapePlan(edict_t *ent)
+{
+	static int	pause_frames[] = { 22, 28, 34, 0 };
+	static int	fire_frames[] = { 8, 9, 0 };
+
+	// reset escape plan timer
+	escapeTimer = level.time;
+
+	const int MAX_SPEED = 300;
+	const int MIN_SPEED = 60;
+
+	// calculate speed based on health
+	// linear function with max hp = min speed and 0 hp = max speed
+	float slope = 1.0f * (MIN_SPEED - MAX_SPEED) / playerMaxHealth;
+	int speed = (int)(slope * playerHealth + MAX_SPEED);
+
+	char* speedStr;
+	itoa(speed, speedStr, 10);
+
+	// set player speed
+	gi.cvar_set("cl_forwardspeed", speedStr);
+	gi.cvar_set("cl_sidespeed", speedStr);
+
+	Weapon_Generic(ent, 7, 18, 36, 39, pause_frames, fire_frames, weapon_escape_plan_fire);
+}
 
 // ============== end of custom mod stuff ==================

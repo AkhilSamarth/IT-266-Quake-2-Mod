@@ -20,6 +20,21 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 #include "m_player.h"
 
+// avoid magic nums
+#define SPEED_SCOUT 400
+#define SPEED_SOLDIER 150
+#define SPEED_SNIPER 200
+#define SPEED_DEMO 180
+#define SPEED_HEAVY 100
+
+#define HEALTH_SCOUT 125
+#define HEALTH_SOLDIER 200
+#define HEALTH_SNIPER 175
+#define HEALTH_DEMO 175
+#define HEALTH_HEAVY 300
+
+#define ESCAPE_DELAY 0.5	// time after dequipping escape plan to return speed to normal
+
 // enum to keep track of player's current class
 typedef enum class { NOT_SET, SCOUT, SOLDIER, SNIPER, DEMO, HEAVY } class_t;
 class_t currentClass = NOT_SET;
@@ -1563,10 +1578,13 @@ void PrintPmove (pmove_t *pm)
 	Com_Printf ("sv %3i:%i %i\n", pm->cmd.impulse, c1, c2);
 }
 
-// mod vars
+// forward declare setSpeed
+void setSpeed(int speed);
 
+// mod vars
 // p_weapons.c
 float minigunTimer;
+float escapeTimer;
 qboolean pistolFired;
 
 /*
@@ -1762,6 +1780,11 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		pistolFired = false;
 	}
 
+	// if escape timer has expired and current class is heavy, reset player speed
+	if (currentClass == HEAVY && (level.time - escapeTimer >= ESCAPE_DELAY)) {
+		setSpeed(SPEED_HEAVY);
+	}
+
 	// upgdate global health var
 	playerHealth = ent->health;
 	playerMaxHealth = ent->max_health;
@@ -1847,50 +1870,50 @@ void setSpeed(int speed) {
 void switchToScout(edict_t* ent) {
 	currentClass = SCOUT;
 
-	setSpeed(400);
+	setSpeed(SPEED_SCOUT);
 
 	// set hp
-	ent->max_health = 125;
-	ent->health = 125;
+	ent->max_health = HEALTH_SCOUT;
+	ent->health = HEALTH_SCOUT;
 }
 
 void switchToSoldier(edict_t* ent) {
 	currentClass = SOLDIER;
 
-	setSpeed(150);
+	setSpeed(SPEED_SOLDIER);
 
 	// set hp
-	ent->max_health = 200;
-	ent->health = 200;
+	ent->max_health = HEALTH_SOLDIER;
+	ent->health = HEALTH_SOLDIER;
 }
 
 void switchToSniper(edict_t* ent) {
 	currentClass = SNIPER;
 
-	setSpeed(200);
+	setSpeed(SPEED_SNIPER);
 
 	// set hp
-	ent->max_health = 175;
-	ent->health = 175;
+	ent->max_health = HEALTH_SNIPER;
+	ent->health = HEALTH_SNIPER;
 }
 
 void switchToDemo(edict_t* ent) {
 	currentClass = DEMO;
 
-	setSpeed(180);
+	setSpeed(SPEED_DEMO);
 
 	// set hp
-	ent->max_health = 175;
-	ent->health = 175;
+	ent->max_health = HEALTH_DEMO;
+	ent->health = HEALTH_DEMO;
 }
 
 void switchToHeavy(edict_t* ent) {
 	currentClass = HEAVY;
 
-	setSpeed(100);
+	setSpeed(SPEED_HEAVY);
 
 	// set hp
-	ent->max_health = 300;
-	ent->health = 300;
+	ent->max_health = HEALTH_HEAVY;
+	ent->health = HEALTH_HEAVY;
 }
 
