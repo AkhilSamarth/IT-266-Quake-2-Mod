@@ -1867,6 +1867,23 @@ void setSpeed(int speed) {
 	gi.cvar_set("cl_sidespeed", speedStr);
 }
 
+// clear the inventory
+void resetInventory(gclient_t* client) {
+	// copied form InitClientPersistant and modified
+	gitem_t		*item;
+
+	memset(&client->pers, 0, sizeof(client->pers));
+
+	client->pers.max_bullets = 200;
+	client->pers.max_shells = 100;
+	client->pers.max_rockets = 50;
+	client->pers.max_grenades = 50;
+	client->pers.max_cells = 200;
+	client->pers.max_slugs = 50;
+
+	client->pers.connected = true;
+}
+
 // give the player the given weapon
 void giveWeapon(edict_t* ent, char* pickupName) {
 	// copied from Cmd_Give_f and modified to fit here
@@ -1906,11 +1923,20 @@ void giveWeapon(edict_t* ent, char* pickupName) {
 		if (it_ent->inuse)
 			G_FreeEdict(it_ent);
 	}
+
+	// select weapon
+	ent->client->pers.selected_item = ITEM_INDEX(it);
+	ent->client->pers.inventory[ent->client->pers.selected_item] = 1;
+
+	ent->client->pers.weapon = it;
 }
 
 // functions for switching to a given class
 void switchToScout(edict_t* ent) {
 	currentClass = SCOUT;
+
+	// inv management
+	resetInventory(ent->client);
 
 	setSpeed(SPEED_SCOUT);
 
@@ -1918,46 +1944,79 @@ void switchToScout(edict_t* ent) {
 	ent->max_health = HEALTH_SCOUT;
 	ent->health = HEALTH_SCOUT;
 
+	// give class weapons
 	giveWeapon(ent, "Scattergun");
+	giveWeapon(ent, "Pistol");
+	giveWeapon(ent, "Panic Attack");
 }
 
-void switchToSoldier(edict_t* ent) {
-	currentClass = SOLDIER;
-
-	setSpeed(SPEED_SOLDIER);
-
-	// set hp
-	ent->max_health = HEALTH_SOLDIER;
-	ent->health = HEALTH_SOLDIER;
-}
-
-void switchToSniper(edict_t* ent) {
-	currentClass = SNIPER;
-
-	setSpeed(SPEED_SNIPER);
-
-	// set hp
-	ent->max_health = HEALTH_SNIPER;
-	ent->health = HEALTH_SNIPER;
-}
-
-void switchToDemo(edict_t* ent) {
-	currentClass = DEMO;
-
-	setSpeed(SPEED_DEMO);
-
-	// set hp
-	ent->max_health = HEALTH_DEMO;
-	ent->health = HEALTH_DEMO;
-}
 
 void switchToHeavy(edict_t* ent) {
 	currentClass = HEAVY;
+
+	resetInventory(ent->client);
 
 	setSpeed(SPEED_HEAVY);
 
 	// set hp
 	ent->max_health = HEALTH_HEAVY;
 	ent->health = HEALTH_HEAVY;
+
+	// give class weapons
+	giveWeapon(ent, "Minigun");
+	giveWeapon(ent, "Shotgun");
+	giveWeapon(ent, "Escape Plan");
+}
+
+void switchToSoldier(edict_t* ent) {
+	currentClass = SOLDIER;
+
+	// inv management
+	resetInventory(ent->client);
+
+	setSpeed(SPEED_SOLDIER);
+
+	// set hp
+	ent->max_health = HEALTH_SOLDIER;
+	ent->health = HEALTH_SOLDIER;
+
+	// give class weapons
+	giveWeapon(ent, "Rocket Launcher");
+	giveWeapon(ent, "Blaster");
+	giveWeapon(ent, "Slow Death");
+}
+
+void switchToSniper(edict_t* ent) {
+	currentClass = SNIPER;
+
+	resetInventory(ent->client);
+
+	setSpeed(SPEED_SNIPER);
+
+	// set hp
+	ent->max_health = HEALTH_SNIPER;
+	ent->health = HEALTH_SNIPER;
+
+	// give class weapons
+	giveWeapon(ent, "Sniper Rifle");
+	giveWeapon(ent, "SMG");
+	giveWeapon(ent, "Huntsman");
+}
+
+void switchToDemo(edict_t* ent) {
+	currentClass = DEMO;
+
+	resetInventory(ent->client);
+
+	setSpeed(SPEED_DEMO);
+
+	// set hp
+	ent->max_health = HEALTH_DEMO;
+	ent->health = HEALTH_DEMO;
+
+	// give class weapons
+	giveWeapon(ent, "Grenade Launcher");
+	giveWeapon(ent, "Direct Hit");
+	giveWeapon(ent, "Sticky Launcher");
 }
 
