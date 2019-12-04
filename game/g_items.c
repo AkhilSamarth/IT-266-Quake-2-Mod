@@ -45,6 +45,9 @@ void Weapon_SlowDeath(edict_t* ent);
 void Weapon_PanicAttack(edict_t* ent);
 void Weapon_Sniper(edict_t* ent);
 void Weapon_EscapePlan(edict_t* ent);
+void Weapon_Huntsman(edict_t* ent);
+void Weapon_DirectHit(edict_t* ent);
+void Weapon_StickyLauncher(edict_t* ent);
 
 gitem_armor_t jacketarmor_info	= { 25,  50, .30, .00, ARMOR_JACKET};
 gitem_armor_t combatarmor_info	= { 50, 100, .60, .30, ARMOR_COMBAT};
@@ -2228,7 +2231,7 @@ tank commander's head
 		/* precache */ "models/objects/rocket/tris.md2 weapons/rockfly.wav weapons/rocklf1a.wav weapons/rocklr1b.wav models/objects/debris2/tris.md2"
 	},
 
-	{
+	{	// scout weapon
 		"weapon_panicattack",
 		Pickup_Weapon,
 		Use_Weapon,
@@ -2262,7 +2265,7 @@ tank commander's head
 		/* pickup */	"Sniper Rifle",
 		0,
 		1,
-		"Slugs",
+		"Bullets",
 		IT_WEAPON | IT_STAY_COOP,
 		WEAP_RAILGUN,
 		NULL,
@@ -2270,7 +2273,7 @@ tank commander's head
 		/* precache */ "weapons/rg_hum.wav"
 	},
 
-	{
+	{	// heavy weapon
 		"weapon_escape_plan",
 		Pickup_Weapon,
 		Use_Weapon,
@@ -2289,6 +2292,69 @@ tank commander's head
 		NULL,
 		0,
 		/* precache */ "weapons/shotgf1b.wav weapons/shotgr1b.wav"
+	},
+
+	{	// sniper weapon
+		"weapon_huntsman",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_Huntsman,
+		"misc/w_pkup.wav",
+		"models/weapons/g_rail/tris.md2", EF_ROTATE,
+		"models/weapons/v_rail/tris.md2",
+		/* icon */		"w_railgun",
+		/* pickup */	"Huntsman",
+		0,
+		1,
+		"Cells",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_RAILGUN,
+		NULL,
+		0,
+		/* precache */ "weapons/rg_hum.wav"
+	},
+
+	{
+		"weapon_directhit",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_DirectHit,
+		"misc/w_pkup.wav",
+		"models/weapons/g_launch/tris.md2", EF_ROTATE,
+		"models/weapons/v_launch/tris.md2",
+		/* icon */		"w_glauncher",
+		/* pickup */	"Direct Hit",
+		0,
+		1,
+		"Grenades",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_GRENADELAUNCHER,
+		NULL,
+		0,
+		/* precache */ "models/objects/grenade/tris.md2 weapons/grenlf1a.wav weapons/grenlr1b.wav weapons/grenlb1b.wav"
+	},
+
+	{
+		"weapon_stickylauncher",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_StickyLauncher,
+		"misc/w_pkup.wav",
+		"models/weapons/g_launch/tris.md2", EF_ROTATE,
+		"models/weapons/v_launch/tris.md2",
+		/* icon */		"w_glauncher",
+		/* pickup */	"Sticky Launcher",
+		0,
+		1,
+		"Grenades",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_GRENADELAUNCHER,
+		NULL,
+		0,
+		/* precache */ "models/objects/grenade/tris.md2 weapons/grenlf1a.wav weapons/grenlr1b.wav weapons/grenlb1b.wav"
 	},
 
 	// =========== end of custom items for mod ===========
