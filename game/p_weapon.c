@@ -1435,11 +1435,13 @@ void Weapon_BFG (edict_t *ent)
 #define MINIGUN_SPINUP_DELAY 0.8	// time before minigun starts firing
 #define SNIPER_SCOPE_DELAY 1		// delay between scoping and firing sniper
 #define SNIPER_RESCOPE_DELAY 2		// delay between unscoping and scoping again
+#define STICKY_DETONATION 8		// time after first sticky is launched to detonation
 
 float scatterGunTimer;	// timer for scattergun's second shot
 float minigunTimer;		// timer for minigun spin-up time
 float sniperTimer = 0;		// timer for delay between scoping and firing, also between unscoping and rescoping
 float escapeTimer;		// timer to see if speed needs to be reset after dequipping escape plan
+float stickyTimer = 0;	// timer for sticky launcher fuse
 
 qboolean pistolFired = false;	// used to make pistol semi-auto instead of automatic
 qboolean sniperScoped = false;	// checks if the sniper is currently scoped
@@ -2223,10 +2225,10 @@ void weapon_sticky_launcher_fire(edict_t *ent)
 	vec3_t	offset;
 	vec3_t	forward, right;
 	vec3_t	start;
-	int		damage = 200;	// increase damage to 200
+	int		damage = 200;
 	float	radius;
 
-	radius = damage + 40;
+	radius = 300;
 	if (is_quad)
 		damage *= 4;
 
@@ -2237,7 +2239,16 @@ void weapon_sticky_launcher_fire(edict_t *ent)
 	VectorScale(forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
 
-	fire_grenade(ent, start, forward, damage, 100, 6, radius);		// increased fuse time from 2.5 to 6, decreased speed from 600 to 100
+	// if sticky timer is zero (first grenade of this batch), start timer
+	if (stickyTimer == 0) {
+		stickyTimer = level.time;
+	}
+
+	// fuse length should be detonation time - time elapsed since first fire
+	// this way, all of them should explode at once
+	float fuse = STICKY_DETONATION - (level.time - stickyTimer);
+
+	fire_grenade(ent, start, forward, damage, 50, fuse, radius);		// decreased speed from 600 to 300
 
 	gi.WriteByte(svc_muzzleflash);
 	gi.WriteShort(ent - g_edicts);
@@ -2256,6 +2267,11 @@ void Weapon_StickyLauncher(edict_t *ent)
 {
 	static int	pause_frames[] = { 34, 51, 59, 0 };
 	static int	fire_frames[] = { 6, 0 };
+
+	// if sticky timer has exceeded sticky detonation time, reset it to 0
+	if ((level.time - stickyTimer) >= STICKY_DETONATION) {
+		stickyTimer = 0;
+	}
 
 	Weapon_Generic(ent, 5, 16, 59, 64, pause_frames, fire_frames, weapon_sticky_launcher_fire);
 }
