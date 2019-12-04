@@ -20,6 +20,25 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 #include "m_player.h"
 
+// avoid magic nums
+#define SPEED_SCOUT 400
+#define SPEED_SOLDIER 150
+#define SPEED_SNIPER 200
+#define SPEED_DEMO 180
+#define SPEED_HEAVY 100
+
+#define HEALTH_SCOUT 125
+#define HEALTH_SOLDIER 200
+#define HEALTH_SNIPER 175
+#define HEALTH_DEMO 175
+#define HEALTH_HEAVY 300
+
+#define ESCAPE_DELAY 0.5	// time after dequipping escape plan to return speed to normal
+
+// enum to keep track of player's current class
+typedef enum class { NOT_SET, SCOUT, SOLDIER, SNIPER, DEMO, HEAVY } class_t;
+class_t currentClass = NOT_SET;
+
 void ClientUserinfoChanged (edict_t *ent, char *userinfo);
 
 void SP_misc_teleporter_dest (edict_t *ent);
@@ -1559,6 +1578,15 @@ void PrintPmove (pmove_t *pm)
 	Com_Printf ("sv %3i:%i %i\n", pm->cmd.impulse, c1, c2);
 }
 
+// forward declare setSpeed
+void setSpeed(int speed);
+
+// mod vars
+// p_weapons.c
+float minigunTimer;
+float escapeTimer;
+qboolean pistolFired;
+
 /*
 ==============
 ClientThink
@@ -1741,6 +1769,25 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		if (other->inuse && other->client->chase_target == ent)
 			UpdateChaseCam(other);
 	}
+
+	// if mouse button isn't being pressed, reset minigun timer
+	if (!(ent->client->buttons & BUTTON_ATTACK)) {
+		minigunTimer = level.time;
+	}
+
+	// if mouse button isn't being pressed, reset pistolFired
+	if (!(ent->client->buttons & BUTTON_ATTACK)) {
+		pistolFired = false;
+	}
+
+	// if escape timer has expired and current class is heavy, reset player speed
+	if (currentClass == HEAVY && (level.time - escapeTimer >= ESCAPE_DELAY)) {
+		setSpeed(SPEED_HEAVY);
+	}
+
+	// upgdate global health var
+	playerHealth = ent->health;
+	playerMaxHealth = ent->max_health;
 }
 
 
@@ -1759,6 +1806,11 @@ void ClientBeginServerFrame (edict_t *ent)
 
 	if (level.intermissiontime)
 		return;
+
+	// if class hasn't been set, default to scout
+	if (currentClass == NOT_SET) {
+		switchToScout(ent);
+	}
 
 	client = ent->client;
 
@@ -1803,3 +1855,65 @@ void ClientBeginServerFrame (edict_t *ent)
 
 	client->latched_buttons = 0;
 }
+
+// stuff related to classes below
+
+void setSpeed(int speed) {
+	char* speedStr;
+	itoa(speed, speedStr, 10);
+
+	gi.cvar_set("cl_forwardspeed", speedStr);
+	gi.cvar_set("cl_sidespeed", speedStr);
+}
+
+// functions for switching to a given class
+void switchToScout(edict_t* ent) {
+	currentClass = SCOUT;
+
+	setSpeed(SPEED_SCOUT);
+
+	// set hp
+	ent->max_health = HEALTH_SCOUT;
+	ent->health = HEALTH_SCOUT;
+}
+
+void switchToSoldier(edict_t* ent) {
+	currentClass = SOLDIER;
+
+	setSpeed(SPEED_SOLDIER);
+
+	// set hp
+	ent->max_health = HEALTH_SOLDIER;
+	ent->health = HEALTH_SOLDIER;
+}
+
+void switchToSniper(edict_t* ent) {
+	currentClass = SNIPER;
+
+	setSpeed(SPEED_SNIPER);
+
+	// set hp
+	ent->max_health = HEALTH_SNIPER;
+	ent->health = HEALTH_SNIPER;
+}
+
+void switchToDemo(edict_t* ent) {
+	currentClass = DEMO;
+
+	setSpeed(SPEED_DEMO);
+
+	// set hp
+	ent->max_health = HEALTH_DEMO;
+	ent->health = HEALTH_DEMO;
+}
+
+void switchToHeavy(edict_t* ent) {
+	currentClass = HEAVY;
+
+	setSpeed(SPEED_HEAVY);
+
+	// set hp
+	ent->max_health = HEALTH_HEAVY;
+	ent->health = HEALTH_HEAVY;
+}
+

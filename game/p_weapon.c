@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 #include "m_player.h"
 
-
 static qboolean	is_quad;
 static byte		is_silenced;
 
@@ -711,7 +710,7 @@ void weapon_grenadelauncher_fire (edict_t *ent)
 	vec3_t	offset;
 	vec3_t	forward, right;
 	vec3_t	start;
-	int		damage = 120;
+	int		damage = 100;	// lower damage from 120 to 100
 	float	radius;
 
 	radius = damage+40;
@@ -725,7 +724,7 @@ void weapon_grenadelauncher_fire (edict_t *ent)
 	VectorScale (forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
 
-	fire_grenade (ent, start, forward, damage, 600, 2.5, radius);
+	fire_grenade (ent, start, forward, damage, 1000, 2.5, radius);		// increased grenade speed from 600 to 1000
 
 	gi.WriteByte (svc_muzzleflash);
 	gi.WriteShort (ent-g_edicts);
@@ -764,7 +763,7 @@ void Weapon_RocketLauncher_Fire (edict_t *ent)
 	float	damage_radius;
 	int		radius_damage;
 
-	damage = 100 + (int)(random() * 20.0);
+	damage = 90;		// lowered damage from (100 + rand(20))
 	radius_damage = 120;
 	damage_radius = 120;
 	if (is_quad)
@@ -780,7 +779,7 @@ void Weapon_RocketLauncher_Fire (edict_t *ent)
 
 	VectorSet(offset, 8, 8, ent->viewheight-8);
 	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
-	fire_rocket (ent, start, forward, damage, 650, damage_radius, radius_damage);
+	fire_rocket (ent, start, forward, damage, 900, damage_radius, radius_damage);	// 3x higher speed than default, from 300 to 900
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
@@ -829,7 +828,8 @@ void Blaster_Fire (edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, in
 	VectorScale (forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
 
-	fire_blaster (ent, start, forward, damage, 1000, effect, hyper);
+	damage *= 5;	// double original blaster damage
+	fire_blaster (ent, start, forward, damage, 200, effect, hyper);		// changed speed from 1000 to 200
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
@@ -1186,7 +1186,7 @@ void weapon_shotgun_fire (edict_t *ent)
 	vec3_t		start;
 	vec3_t		forward, right;
 	vec3_t		offset;
-	int			damage = 4;
+	int			damage = 6;		// higher damage to match TF2
 	int			kick = 8;
 
 	if (ent->client->ps.gunframe == 9)
@@ -1209,10 +1209,8 @@ void weapon_shotgun_fire (edict_t *ent)
 		kick *= 4;
 	}
 
-	if (deathmatch->value)
-		fire_shotgun (ent, start, forward, damage, kick, 500, 500, DEFAULT_DEATHMATCH_SHOTGUN_COUNT, MOD_SHOTGUN);
-	else
-		fire_shotgun (ent, start, forward, damage, kick, 500, 500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
+	// 3x higher spread than default shotgun
+	fire_shotgun (ent, start, forward, damage, kick, 1500, 1500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
@@ -1430,5 +1428,852 @@ void Weapon_BFG (edict_t *ent)
 	Weapon_Generic (ent, 8, 32, 55, 58, pause_frames, fire_frames, weapon_bfg_fire);
 }
 
+// ============== custom mod stuff ==================
 
-//======================================================================
+#define SCATTERGUN_SECOND_SHOT_DELAY 0.5	// delay between first and second shots of scattergun
+#define SCATTERGUN_COUNT 10			// number of projectiles fired by each scattergun shot
+#define MINIGUN_SPINUP_DELAY 0.8	// time before minigun starts firing
+#define SNIPER_SCOPE_DELAY 1		// delay between scoping and firing sniper
+#define SNIPER_RESCOPE_DELAY 2		// delay between unscoping and scoping again
+#define STICKY_DETONATION 8		// time after first sticky is launched to detonation
+
+float scatterGunTimer;	// timer for scattergun's second shot
+float minigunTimer;		// timer for minigun spin-up time
+float sniperTimer = 0;		// timer for delay between scoping and firing, also between unscoping and rescoping
+float escapeTimer;		// timer to see if speed needs to be reset after dequipping escape plan
+float stickyTimer = 0;	// timer for sticky launcher fuse
+
+qboolean pistolFired = false;	// used to make pistol semi-auto instead of automatic
+qboolean sniperScoped = false;	// checks if the sniper is currently scoped
+qboolean sniperFired = false;	// sniper has been fired and is waiting for mouse button to be released
+
+// isSecondFire tells function is this is the scattergun's first or second fire
+void weapon_scattergun_fire(edict_t *ent) {
+	vec3_t		start;
+	vec3_t		forward, right;
+	vec3_t		offset;
+	int			damage = 4;
+	int			kick = 8;
+
+	if (ent->client->ps.gunframe == 9)
+	{
+		ent->client->ps.gunframe++;
+		return;
+	}
+
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+
+	VectorScale(forward, -2, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -2;
+
+	VectorSet(offset, 0, 8, ent->viewheight - 8);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+
+	if (is_quad)
+	{
+		damage *= 4;
+		kick *= 4;
+	}
+
+	// shotgun fire function with slightly modified values
+	fire_shotgun(ent, start, forward, damage, kick, 400, 400, SCATTERGUN_COUNT, MOD_SHOTGUN);		// default spread 500
+
+	// send muzzle flash
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	gi.WriteByte(MZ_SHOTGUN | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	ent->client->ps.gunframe++;
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+	if (!((int)dmflags->value & DF_INFINITE_AMMO))
+		ent->client->pers.inventory[ent->client->ammo_index]--;
+
+	// if the timer is not running, this is the first shot, so start the timer
+	if (scatterGunTimer == 0) {
+		scatterGunTimer = level.time;
+	}
+}
+
+void Weapon_Scattergun(edict_t* ent) {
+	// copied from shotgun code
+	static int	pause_frames[] = { 22, 28, 34, 0 };
+	static int	fire_frames[] = { 8, 9, 0 };
+
+	Weapon_Generic(ent, 7, 18, 36, 39, pause_frames, fire_frames, weapon_scattergun_fire);
+
+	// timer for scattergun second shot
+	if (scatterGunTimer != 0 && level.time - scatterGunTimer >= SCATTERGUN_SECOND_SHOT_DELAY) {
+		// fire again if mouse button is pressed and reset the timer
+		if (ent->client->buttons & BUTTON_ATTACK) {
+			weapon_scattergun_fire(ent);
+			scatterGunTimer = 0;
+		}
+	}
+}
+
+void weapon_minigun_fire(edict_t *ent)
+{
+	int			i;
+	int			shots;
+	vec3_t		start;
+	vec3_t		forward, right, up;
+	float		r, u;
+	vec3_t		offset;
+	int			damage;
+	int			kick = 2;
+
+	damage = 8;
+
+	if (ent->client->ps.gunframe == 5)
+		gi.sound(ent, CHAN_AUTO, gi.soundindex("weapons/chngnu1a.wav"), 1, ATTN_IDLE, 0);
+
+	if ((ent->client->ps.gunframe == 14) && !(ent->client->buttons & BUTTON_ATTACK))
+	{
+		ent->client->ps.gunframe = 32;
+		ent->client->weapon_sound = 0;
+		return;
+	}
+	else if ((ent->client->ps.gunframe == 21) && (ent->client->buttons & BUTTON_ATTACK)
+		&& ent->client->pers.inventory[ent->client->ammo_index])
+	{
+		ent->client->ps.gunframe = 15;
+	}
+	else
+	{
+		ent->client->ps.gunframe++;
+	}
+
+	if (ent->client->ps.gunframe == 22)
+	{
+		ent->client->weapon_sound = 0;
+		gi.sound(ent, CHAN_AUTO, gi.soundindex("weapons/chngnd1a.wav"), 1, ATTN_IDLE, 0);
+	}
+	else
+	{
+		ent->client->weapon_sound = gi.soundindex("weapons/chngnl1a.wav");
+	}
+
+	ent->client->anim_priority = ANIM_ATTACK;
+	if (ent->client->ps.pmove.pm_flags & PMF_DUCKED)
+	{
+		ent->s.frame = FRAME_crattak1 - (ent->client->ps.gunframe & 1);
+		ent->client->anim_end = FRAME_crattak9;
+	}
+	else
+	{
+		ent->s.frame = FRAME_attack1 - (ent->client->ps.gunframe & 1);
+		ent->client->anim_end = FRAME_attack8;
+	}
+
+	if (ent->client->ps.gunframe <= 9)
+		shots = 1;
+	else if (ent->client->ps.gunframe <= 14)
+	{
+		if (ent->client->buttons & BUTTON_ATTACK)
+			shots = 2;
+		else
+			shots = 1;
+	}
+	else
+		shots = 3;
+
+	if (ent->client->pers.inventory[ent->client->ammo_index] < shots)
+		shots = ent->client->pers.inventory[ent->client->ammo_index];
+
+	if (!shots)
+	{
+		if (level.time >= ent->pain_debounce_time)
+		{
+			gi.sound(ent, CHAN_VOICE, gi.soundindex("weapons/noammo.wav"), 1, ATTN_NORM, 0);
+			ent->pain_debounce_time = level.time + 1;
+		}
+		NoAmmoWeaponChange(ent);
+		return;
+	}
+
+	if (is_quad)
+	{
+		damage *= 4;
+		kick *= 4;
+	}
+
+	for (i = 0; i<3; i++)
+	{
+		ent->client->kick_origin[i] = crandom() * 0.35;
+		ent->client->kick_angles[i] = crandom() * 0.7;
+	}
+
+	// if spin-up delay hasn't been reached, don't fire (gun is still spinning up)
+	if (level.time - minigunTimer < MINIGUN_SPINUP_DELAY) {
+		return;
+	}
+
+	shots = 1;	// gun should have constant fire rate
+
+	for (i = 0; i<shots; i++)
+	{
+		// get start / end positions
+		AngleVectors(ent->client->v_angle, forward, right, up);
+		r = 7 + crandom() * 4;
+		u = crandom() * 4;
+		VectorSet(offset, 0, r, u + ent->viewheight - 8);
+		P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+
+		fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_CHAINGUN);
+	}
+
+	// send muzzle flash
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	gi.WriteByte((MZ_CHAINGUN1 + shots - 1) | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+	if (!((int)dmflags->value & DF_INFINITE_AMMO))
+		ent->client->pers.inventory[ent->client->ammo_index] -= shots;
+}
+
+void Weapon_Minigun(edict_t *ent)
+{
+	static int	pause_frames[] = { 38, 43, 51, 61, 0 };
+	static int	fire_frames[] = { 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 0 };
+
+	Weapon_Generic(ent, 4, 31, 61, 64, pause_frames, fire_frames, weapon_minigun_fire);
+}
+
+void weapon_pistol_fire(edict_t *ent)
+{
+	int	i;
+	vec3_t		start;
+	vec3_t		forward, right;
+	vec3_t		angles;
+	int			damage = 8;
+	int			kick = 2;
+	vec3_t		offset;
+
+	// if pistol has been fired, don't fire again until boolean is reset
+	if (pistolFired) {
+		return;
+	}
+	else {
+		pistolFired = true;
+	}
+
+	if (!(ent->client->buttons & BUTTON_ATTACK))
+	{
+		ent->client->machinegun_shots = 0;
+		//ent->client->ps.gunframe++;	don't want kickback when firing stops
+		return;
+	}
+	
+	if (ent->client->ps.gunframe == 5)
+		ent->client->ps.gunframe = 4;
+	else
+		ent->client->ps.gunframe = 5;
+
+	if (ent->client->pers.inventory[ent->client->ammo_index] < 1)
+	{
+		ent->client->ps.gunframe = 6;
+		if (level.time >= ent->pain_debounce_time)
+		{
+			gi.sound(ent, CHAN_VOICE, gi.soundindex("weapons/noammo.wav"), 1, ATTN_NORM, 0);
+			ent->pain_debounce_time = level.time + 1;
+		}
+		NoAmmoWeaponChange(ent);
+		return;
+	}
+
+	if (is_quad)
+	{
+		damage *= 4;
+		kick *= 4;
+	}
+
+	for (i = 1; i<3; i++)
+	{
+		ent->client->kick_origin[i] = crandom() * 0.35;
+		ent->client->kick_angles[i] = crandom() * 0.7;
+	}
+	ent->client->kick_origin[0] = crandom() * 0.35;
+	ent->client->kick_angles[0] = ent->client->machinegun_shots * -1.5;
+
+	// raise the gun as it is firing
+	if (!deathmatch->value)
+	{
+		ent->client->machinegun_shots++;
+		if (ent->client->machinegun_shots > 9)
+			ent->client->machinegun_shots = 9;
+	}
+
+	// don't want recoil
+	kick = 0;
+	ent->client->machinegun_shots = 0;
+
+	// get start / end positions
+	VectorAdd(ent->client->v_angle, ent->client->kick_angles, angles);
+	AngleVectors(angles, forward, right, NULL);
+	VectorSet(offset, 0, 8, ent->viewheight - 8);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+	fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	gi.WriteByte(MZ_MACHINEGUN | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+	if (!((int)dmflags->value & DF_INFINITE_AMMO))
+		ent->client->pers.inventory[ent->client->ammo_index]--;
+
+	ent->client->anim_priority = ANIM_ATTACK;
+	if (ent->client->ps.pmove.pm_flags & PMF_DUCKED)
+	{
+		ent->s.frame = FRAME_crattak1 - (int)(random() + 0.25);
+		ent->client->anim_end = FRAME_crattak9;
+	}
+	else
+	{
+		ent->s.frame = FRAME_attack1 - (int)(random() + 0.25);
+		ent->client->anim_end = FRAME_attack8;
+	}
+}
+
+void Weapon_Pistol(edict_t *ent)
+{
+	static int	pause_frames[] = { 19, 32, 0 };
+	static int	fire_frames[] = { 5, 0 };
+
+	Weapon_Generic(ent, 4, 8, 52, 55, pause_frames, fire_frames, weapon_pistol_fire);
+}
+
+void weapon_SMG_fire(edict_t *ent)
+{
+	int	i;
+	vec3_t		start;
+	vec3_t		forward, right;
+	vec3_t		angles;
+	int			damage = 8;
+	int			kick = 2;
+	vec3_t		offset;
+
+	if (!(ent->client->buttons & BUTTON_ATTACK))
+	{
+		ent->client->machinegun_shots = 0;
+		//ent->client->ps.gunframe++;	// don't want kickback after firing stops
+		return;
+	}
+
+	if (ent->client->ps.gunframe == 5)
+		ent->client->ps.gunframe = 4;
+	else
+		ent->client->ps.gunframe = 5;
+
+	if (ent->client->pers.inventory[ent->client->ammo_index] < 1)
+	{
+		ent->client->ps.gunframe = 6;
+		if (level.time >= ent->pain_debounce_time)
+		{
+			gi.sound(ent, CHAN_VOICE, gi.soundindex("weapons/noammo.wav"), 1, ATTN_NORM, 0);
+			ent->pain_debounce_time = level.time + 1;
+		}
+		NoAmmoWeaponChange(ent);
+		return;
+	}
+
+	if (is_quad)
+	{
+		damage *= 4;
+		kick *= 4;
+	}
+
+	for (i = 1; i<3; i++)
+	{
+		ent->client->kick_origin[i] = crandom() * 0.35;
+		ent->client->kick_angles[i] = crandom() * 0.7;
+	}
+	ent->client->kick_origin[0] = crandom() * 0.35;
+	ent->client->kick_angles[0] = ent->client->machinegun_shots * -1.5;
+
+	// raise the gun as it is firing
+	if (!deathmatch->value)
+	{
+		ent->client->machinegun_shots++;
+		if (ent->client->machinegun_shots > 9)
+			ent->client->machinegun_shots = 9;
+	}
+
+	// don't want recoil
+	kick = 0;
+	ent->client->machinegun_shots = 0;
+
+	// get start / end positions
+	VectorAdd(ent->client->v_angle, ent->client->kick_angles, angles);
+	AngleVectors(angles, forward, right, NULL);
+	VectorSet(offset, 0, 8, ent->viewheight - 8);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+	fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	gi.WriteByte(MZ_MACHINEGUN | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+	if (!((int)dmflags->value & DF_INFINITE_AMMO))
+		ent->client->pers.inventory[ent->client->ammo_index]--;
+
+	ent->client->anim_priority = ANIM_ATTACK;
+	if (ent->client->ps.pmove.pm_flags & PMF_DUCKED)
+	{
+		ent->s.frame = FRAME_crattak1 - (int)(random() + 0.25);
+		ent->client->anim_end = FRAME_crattak9;
+	}
+	else
+	{
+		ent->s.frame = FRAME_attack1 - (int)(random() + 0.25);
+		ent->client->anim_end = FRAME_attack8;
+	}
+}
+
+void Weapon_SMG(edict_t *ent)
+{
+	static int	pause_frames[] = { 23, 45, 0 };
+	static int	fire_frames[] = { 4, 5, 0 };
+
+	Weapon_Generic(ent, 3, 5, 45, 49, pause_frames, fire_frames, weapon_SMG_fire);
+}
+
+void weapon_slowdeath_fire(edict_t *ent)
+{
+	vec3_t	offset, start;
+	vec3_t	forward, right;
+	int		damage;
+	float	damage_radius;
+	int		radius_damage;
+
+	damage = 1000;		// extremely high damage
+	radius_damage = 500;	// higher knockback too, also means that if you hit it too close to yourself, you'll die
+	damage_radius = 200;	// higher radius
+	if (is_quad)
+	{
+		damage *= 4;
+		radius_damage *= 4;
+	}
+
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+
+	VectorScale(forward, -2, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -1;
+
+	VectorSet(offset, 8, 8, ent->viewheight - 8);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+	fire_rocket(ent, start, forward, damage, 60, damage_radius, radius_damage);	// speed changed from 300 to 60
+
+	// send muzzle flash
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	gi.WriteByte(MZ_ROCKET | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	ent->client->ps.gunframe++;
+
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+	if (!((int)dmflags->value & DF_INFINITE_AMMO))
+		ent->client->pers.inventory[ent->client->ammo_index]--;
+}
+
+void Weapon_SlowDeath(edict_t *ent)
+{
+	static int	pause_frames[] = { 25, 33, 42, 50, 0 };
+	static int	fire_frames[] = { 5, 0 };
+
+	Weapon_Generic(ent, 4, 12, 50, 54, pause_frames, fire_frames, weapon_slowdeath_fire);
+}
+
+void weapon_panicattack_fire(edict_t *ent)
+{
+	vec3_t		start;
+	vec3_t		forward, right;
+	vec3_t		offset;
+	int			damage = 6;		// higher damage to match TF2
+	int			kick = 8;
+
+	const int MAX_SPREAD = 5000;
+	const int MIN_SPREAD = 50;
+
+	if (ent->client->ps.gunframe == 9)
+	{
+		ent->client->ps.gunframe++;
+		return;
+	}
+
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+
+	VectorScale(forward, -2, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -2;
+
+	VectorSet(offset, 0, 8, ent->viewheight - 8);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+
+	if (is_quad)
+	{
+		damage *= 4;
+		kick *= 4;
+	}
+
+	// make sure client exists
+	if (!ent->client) {
+		return;
+	}
+
+	// calculate spread based on health
+	// linear function with max hp = max spread and 0 hp = min spread
+	float slope = 1.0f * (MAX_SPREAD - MIN_SPREAD) / playerMaxHealth;
+	int spread = (int) (slope * playerHealth + MIN_SPREAD);
+	
+	fire_shotgun(ent, start, forward, damage, kick, spread, spread, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
+
+	// send muzzle flash
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	gi.WriteByte(MZ_SHOTGUN | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	ent->client->ps.gunframe++;
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+	if (!((int)dmflags->value & DF_INFINITE_AMMO))
+		ent->client->pers.inventory[ent->client->ammo_index]--;
+}
+
+void Weapon_PanicAttack(edict_t *ent)
+{
+	static int	pause_frames[] = { 22, 28, 34, 0 };
+	static int	fire_frames[] = { 8, 9, 0 };
+
+	Weapon_Generic(ent, 7, 18, 36, 39, pause_frames, fire_frames, weapon_panicattack_fire);
+}
+
+void weapon_sniper_fire(edict_t *ent)
+{
+	vec3_t		start;
+	vec3_t		forward, right;
+	vec3_t		offset;
+	int			damage;
+	int			kick;
+
+	if (deathmatch->value)
+	{	// normal damage is too extreme in dm
+		damage = 100;
+		kick = 200;
+	}
+	else
+	{
+		damage = 150;	// this is fine for tf2
+		kick = 250;
+	}
+
+	if (is_quad)
+	{
+		damage *= 4;
+		kick *= 4;
+	}
+
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+
+	VectorScale(forward, -3, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -3;
+
+	VectorSet(offset, 0, 7, ent->viewheight - 8);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+	fire_bullet(ent, start, forward, damage, kick, 0, 0, MOD_RAILGUN);		// fire bullet instead of railgun projectile
+
+	// send muzzle flash
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	gi.WriteByte(MZ_RAILGUN | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	ent->client->ps.gunframe++;
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+	if (!((int)dmflags->value & DF_INFINITE_AMMO))
+		ent->client->pers.inventory[ent->client->ammo_index]--;
+}
+
+// used for sniper, since firing is handled manually
+void dummy_fire(edict_t* ent) {}
+
+void Weapon_Sniper(edict_t *ent)
+{
+	static int	pause_frames[] = { 56, 0 };
+	static int	fire_frames[] = { 4, 0 };
+	
+	Weapon_Generic(ent, 3, 18, 56, 61, pause_frames, fire_frames, dummy_fire);
+
+	// if already fired, wait for mouse button to be released
+	if (sniperFired) {
+		if (!(ent->client->buttons & BUTTON_ATTACK)) {
+			// unscope and reset boolean
+			ent->client->ps.fov = 90;
+			sniperScoped = false;
+			sniperTimer = level.time;
+			sniperFired = false;
+
+			// speed player up to default
+			gi.cvar_set("cl_forwardspeed", "200");
+			gi.cvar_set("cl_sidespeed", "200");
+
+			return;
+		}
+		// otherwise don't do anything
+		else {
+			return;
+		}
+	}
+
+	if (ent->client->buttons & BUTTON_ATTACK) {
+		// check if sniper is scoped and cooldown is done
+		if (!sniperScoped) {
+			if ((level.time - sniperTimer >= SNIPER_RESCOPE_DELAY)) {
+				// scope and reset the timer
+				sniperTimer = level.time;
+				ent->client->ps.fov = 30;
+				sniperScoped = true;
+
+				// slow down player
+				gi.cvar_set("cl_forwardspeed", "100");
+				gi.cvar_set("cl_sidespeed", "100");
+
+				return;
+			}
+		}
+		// if scoped and delay has completed, fire
+		else if (level.time - sniperTimer >= SNIPER_SCOPE_DELAY) {
+			// fire and set boolean
+			weapon_sniper_fire(ent);
+			sniperFired = true;
+		}
+	}
+}
+
+void weapon_escape_plan_fire(edict_t *ent)
+{
+	vec3_t		start;
+	vec3_t		forward, right;
+	vec3_t		offset;
+	int			damage = 1;		// low damage to compensate for higher speed
+	int			kick = 8;
+
+	if (ent->client->ps.gunframe == 9)
+	{
+		ent->client->ps.gunframe++;
+		return;
+	}
+
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+
+	VectorScale(forward, -2, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -2;
+
+	VectorSet(offset, 0, 8, ent->viewheight - 8);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+
+	if (is_quad)
+	{
+		damage *= 4;
+		kick *= 4;
+	}
+
+	fire_shotgun(ent, start, forward, damage, kick, 500, 500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
+
+	// send muzzle flash
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	gi.WriteByte(MZ_SHOTGUN | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	ent->client->ps.gunframe++;
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+	if (!((int)dmflags->value & DF_INFINITE_AMMO))
+		ent->client->pers.inventory[ent->client->ammo_index]--;
+}
+
+void Weapon_EscapePlan(edict_t *ent)
+{
+	static int	pause_frames[] = { 22, 28, 34, 0 };
+	static int	fire_frames[] = { 8, 9, 0 };
+
+	// reset escape plan timer
+	escapeTimer = level.time;
+
+	const int MAX_SPEED = 300;
+	const int MIN_SPEED = 60;
+
+	// calculate speed based on health
+	// linear function with max hp = min speed and 0 hp = max speed
+	float slope = 1.0f * (MIN_SPEED - MAX_SPEED) / playerMaxHealth;
+	int speed = (int)(slope * playerHealth + MAX_SPEED);
+
+	char* speedStr;
+	itoa(speed, speedStr, 10);
+
+	// set player speed
+	gi.cvar_set("cl_forwardspeed", speedStr);
+	gi.cvar_set("cl_sidespeed", speedStr);
+
+	Weapon_Generic(ent, 7, 18, 36, 39, pause_frames, fire_frames, weapon_escape_plan_fire);
+}
+
+void weapon_huntsman_fire(edict_t *ent)
+{
+	vec3_t		start;
+	vec3_t		forward, right;
+	vec3_t		offset;
+	int			damage;
+	int			kick;
+
+	damage = 80;
+	kick = 200;
+
+	if (is_quad)
+	{
+		damage *= 4;
+		kick *= 4;
+	}
+
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+
+	VectorScale(forward, -3, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -3;
+
+	VectorSet(offset, 0, 7, ent->viewheight - 8);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+	fire_blaster(ent, start, forward, damage, 800, EF_BLASTER, false);
+
+	// send muzzle flash
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	gi.WriteByte(MZ_RAILGUN | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	ent->client->ps.gunframe++;
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+	if (!((int)dmflags->value & DF_INFINITE_AMMO))
+		ent->client->pers.inventory[ent->client->ammo_index]--;
+}
+
+
+void Weapon_Huntsman(edict_t *ent)
+{
+	static int	pause_frames[] = { 56, 0 };
+	static int	fire_frames[] = { 4, 0 };
+
+	Weapon_Generic(ent, 3, 18, 56, 61, pause_frames, fire_frames, weapon_huntsman_fire);
+}
+
+void weapon_directhit_fire(edict_t *ent)
+{
+	vec3_t	offset;
+	vec3_t	forward, right;
+	vec3_t	start;
+	int		damage = 200;	// increase damage to 200
+	
+	if (is_quad)
+		damage *= 4;
+
+	VectorSet(offset, 8, 8, ent->viewheight - 8);
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+
+	VectorScale(forward, -2, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -1;
+
+	fire_grenade(ent, start, forward, damage, 600, 3, 0);		// decreased radius to 0
+
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	gi.WriteByte(MZ_GRENADE | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	ent->client->ps.gunframe++;
+
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+	if (!((int)dmflags->value & DF_INFINITE_AMMO))
+		ent->client->pers.inventory[ent->client->ammo_index]--;
+}
+
+void Weapon_DirectHit(edict_t *ent)
+{
+	static int	pause_frames[] = { 34, 51, 59, 0 };
+	static int	fire_frames[] = { 6, 0 };
+
+	Weapon_Generic(ent, 5, 16, 59, 64, pause_frames, fire_frames, weapon_directhit_fire);
+}
+
+void weapon_sticky_launcher_fire(edict_t *ent)
+{
+	vec3_t	offset;
+	vec3_t	forward, right;
+	vec3_t	start;
+	int		damage = 200;
+	float	radius;
+
+	radius = 300;
+	if (is_quad)
+		damage *= 4;
+
+	VectorSet(offset, 8, 8, ent->viewheight - 8);
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+
+	VectorScale(forward, -2, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -1;
+
+	// if sticky timer is zero (first grenade of this batch), start timer
+	if (stickyTimer == 0) {
+		stickyTimer = level.time;
+	}
+
+	// fuse length should be detonation time - time elapsed since first fire
+	// this way, all of them should explode at once
+	float fuse = STICKY_DETONATION - (level.time - stickyTimer);
+
+	fire_grenade(ent, start, forward, damage, 50, fuse, radius);		// decreased speed from 600 to 300
+
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	gi.WriteByte(MZ_GRENADE | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	ent->client->ps.gunframe++;
+
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+	if (!((int)dmflags->value & DF_INFINITE_AMMO))
+		ent->client->pers.inventory[ent->client->ammo_index]--;
+}
+
+void Weapon_StickyLauncher(edict_t *ent)
+{
+	static int	pause_frames[] = { 34, 51, 59, 0 };
+	static int	fire_frames[] = { 6, 0 };
+
+	// if sticky timer has exceeded sticky detonation time, reset it to 0
+	if ((level.time - stickyTimer) >= STICKY_DETONATION) {
+		stickyTimer = 0;
+	}
+
+	Weapon_Generic(ent, 5, 16, 59, 64, pause_frames, fire_frames, weapon_sticky_launcher_fire);
+}
+
+// ============== end of custom mod stuff ==================

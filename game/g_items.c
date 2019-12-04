@@ -36,6 +36,19 @@ void Weapon_GrenadeLauncher (edict_t *ent);
 void Weapon_Railgun (edict_t *ent);
 void Weapon_BFG (edict_t *ent);
 
+// custom weapon think functions
+void Weapon_Scattergun(edict_t* ent);
+void Weapon_Minigun(edict_t* ent);
+void Weapon_Pistol(edict_t* ent);
+void Weapon_SMG(edict_t* ent);
+void Weapon_SlowDeath(edict_t* ent);
+void Weapon_PanicAttack(edict_t* ent);
+void Weapon_Sniper(edict_t* ent);
+void Weapon_EscapePlan(edict_t* ent);
+void Weapon_Huntsman(edict_t* ent);
+void Weapon_DirectHit(edict_t* ent);
+void Weapon_StickyLauncher(edict_t* ent);
+
 gitem_armor_t jacketarmor_info	= { 25,  50, .30, .00, ARMOR_JACKET};
 gitem_armor_t combatarmor_info	= { 50, 100, .60, .30, ARMOR_COMBAT};
 gitem_armor_t bodyarmor_info	= {100, 200, .80, .60, ARMOR_BODY};
@@ -2110,6 +2123,241 @@ tank commander's head
 		0,
 /* precache */ "items/s_health.wav items/n_health.wav items/l_health.wav items/m_health.wav"
 	},
+
+	// =========== custom items for mod ===========
+
+	{	// scout weapon
+		"weapon_scattergun",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_Scattergun,
+		"misc/w_pkup.wav",
+		"models/weapons/g_shotg/tris.md2", EF_ROTATE,
+		"models/weapons/v_shotg/tris.md2",
+		/* icon */		"w_shotgun",
+		/* pickup */	"Scattergun",
+		0,
+		1,
+		"Shells",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_SHOTGUN,
+		NULL,
+		0,
+		/* precache */ "weapons/shotgf1b.wav weapons/shotgr1b.wav"
+	},
+
+	{	// heavy weapon
+		"weapon_minigun",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_Minigun,
+		"misc/w_pkup.wav",
+		"models/weapons/g_chain/tris.md2", EF_ROTATE,
+		"models/weapons/v_chain/tris.md2",
+		/* icon */		"w_chaingun",
+		/* pickup */	"Minigun",
+		0,
+		1,
+		"Bullets",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_CHAINGUN,
+		NULL,
+		0,
+		/* precache */ "weapons/chngnu1a.wav weapons/chngnl1a.wav weapons/machgf3b.wav` weapons/chngnd1a.wav"
+	},
+
+	{	// scout weapon
+		"weapon_pistol",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_Pistol,
+		"misc/w_pkup.wav",
+		"models/weapons/v_blast/tris.md2", EF_ROTATE,
+		"models/weapons/v_blast/tris.md2",
+		/* icon */		"w_blaster",
+		/* pickup */	"Pistol",
+		0,
+		0,
+		"Bullets",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_BLASTER,
+		NULL,
+		0,
+		/* precache */ "weapons/blastf1a.wav misc/lasfly.wav"
+	},
+	
+	{	// sniper weapon
+		"weapon_smg",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_SMG,
+		"misc/w_pkup.wav",
+		"models/weapons/g_machn/tris.md2", EF_ROTATE,
+		"models/weapons/v_machn/tris.md2",
+		/* icon */		"w_machinegun",
+		/* pickup */	"SMG",
+		0,
+		1,
+		"Bullets",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_MACHINEGUN,
+		NULL,
+		0,
+		/* precache */ "weapons/machgf1b.wav weapons/machgf2b.wav weapons/machgf3b.wav weapons/machgf4b.wav weapons/machgf5b.wav"
+	},
+
+	{	// soldier weapon
+		"weapon_slowdeath",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_SlowDeath,
+		"misc/w_pkup.wav",
+		"models/weapons/g_rocket/tris.md2", EF_ROTATE,
+		"models/weapons/v_rocket/tris.md2",
+		/* icon */		"w_rlauncher",
+		/* pickup */	"Slow Death",
+		0,
+		1,
+		"Rockets",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_ROCKETLAUNCHER,
+		NULL,
+		0,
+		/* precache */ "models/objects/rocket/tris.md2 weapons/rockfly.wav weapons/rocklf1a.wav weapons/rocklr1b.wav models/objects/debris2/tris.md2"
+	},
+
+	{	// scout weapon
+		"weapon_panicattack",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_PanicAttack,
+		"misc/w_pkup.wav",
+		"models/weapons/g_shotg/tris.md2", EF_ROTATE,
+		"models/weapons/v_shotg/tris.md2",
+		/* icon */		"w_shotgun",
+		/* pickup */	"Panic Attack",
+		0,
+		1,
+		"Shells",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_SHOTGUN,
+		NULL,
+		0,
+		/* precache */ "weapons/shotgf1b.wav weapons/shotgr1b.wav"
+	},
+
+	{	// sniper weapon
+		"weapon_sniper",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_Sniper,
+		"misc/w_pkup.wav",
+		"models/weapons/g_rail/tris.md2", EF_ROTATE,
+		"models/weapons/v_rail/tris.md2",
+		/* icon */		"w_railgun",
+		/* pickup */	"Sniper Rifle",
+		0,
+		1,
+		"Bullets",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_RAILGUN,
+		NULL,
+		0,
+		/* precache */ "weapons/rg_hum.wav"
+	},
+
+	{	// heavy weapon
+		"weapon_escape_plan",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_EscapePlan,
+		"misc/w_pkup.wav",
+		"models/weapons/g_shotg/tris.md2", EF_ROTATE,
+		"models/weapons/v_shotg/tris.md2",
+		/* icon */		"w_shotgun",
+		/* pickup */	"Escape Plan",
+		0,
+		1,
+		"Shells",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_SHOTGUN,
+		NULL,
+		0,
+		/* precache */ "weapons/shotgf1b.wav weapons/shotgr1b.wav"
+	},
+
+	{	// sniper weapon
+		"weapon_huntsman",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_Huntsman,
+		"misc/w_pkup.wav",
+		"models/weapons/g_rail/tris.md2", EF_ROTATE,
+		"models/weapons/v_rail/tris.md2",
+		/* icon */		"w_railgun",
+		/* pickup */	"Huntsman",
+		0,
+		1,
+		"Cells",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_RAILGUN,
+		NULL,
+		0,
+		/* precache */ "weapons/rg_hum.wav"
+	},
+
+	{
+		"weapon_directhit",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_DirectHit,
+		"misc/w_pkup.wav",
+		"models/weapons/g_launch/tris.md2", EF_ROTATE,
+		"models/weapons/v_launch/tris.md2",
+		/* icon */		"w_glauncher",
+		/* pickup */	"Direct Hit",
+		0,
+		1,
+		"Grenades",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_GRENADELAUNCHER,
+		NULL,
+		0,
+		/* precache */ "models/objects/grenade/tris.md2 weapons/grenlf1a.wav weapons/grenlr1b.wav weapons/grenlb1b.wav"
+	},
+
+	{
+		"weapon_stickylauncher",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_StickyLauncher,
+		"misc/w_pkup.wav",
+		"models/weapons/g_launch/tris.md2", EF_ROTATE,
+		"models/weapons/v_launch/tris.md2",
+		/* icon */		"w_glauncher",
+		/* pickup */	"Sticky Launcher",
+		0,
+		1,
+		"Grenades",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_GRENADELAUNCHER,
+		NULL,
+		0,
+		/* precache */ "models/objects/grenade/tris.md2 weapons/grenlf1a.wav weapons/grenlr1b.wav weapons/grenlb1b.wav"
+	},
+
+	// =========== end of custom items for mod ===========
 
 	// end of list marker
 	{NULL}

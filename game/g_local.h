@@ -814,6 +814,22 @@ void ChaseNext(edict_t *ent);
 void ChasePrev(edict_t *ent);
 void GetChaseTarget(edict_t *ent);
 
+// =============== stuff for mod =====================
+
+// global player vars
+int playerHealth;
+int playerMaxHealth;
+
+// functions for class switching
+void switchToScout(edict_t* ent);
+void switchToSoldier(edict_t* ent);
+void switchToSniper(edict_t* ent);
+void switchToDemo(edict_t* ent);
+void switchToHeavy(edict_t* ent);
+
+// =============== end stuff for mod ===================== 
+
+
 //============================================================================
 
 // client_t->anim_priority

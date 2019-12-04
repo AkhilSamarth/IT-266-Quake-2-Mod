@@ -900,6 +900,38 @@ void Cmd_PlayerList_f(edict_t *ent)
 }
 
 
+// command to switch class
+void Cmd_SwitchClass_f(edict_t* ent) {
+	// make sure correct num of args has been supplied
+	if (gi.argc() != 2) {
+		gi.cprintf(ent, PRINT_HIGH, "Incorrect number (%d) of arguments supplied.\n", gi.argc());
+		return;
+	}
+
+	// check given arg and check if it's a valid class name
+	char* name = gi.argv(1);
+
+	if (Q_stricmp(name, "scout") == 0) {
+		switchToScout(ent);
+	}
+	else if (Q_stricmp(name, "soldier") == 0) {
+		switchToSoldier(ent);
+	}
+	else if (Q_stricmp(name, "sniper") == 0) {
+		switchToSniper(ent);
+	}
+	else if (Q_stricmp(name, "demo") == 0) {
+		switchToDemo(ent);
+	}
+	else if (Q_stricmp(name, "heavy") == 0) {
+		switchToHeavy(ent);
+	}
+	else {
+		// invalid class name given
+		gi.cprintf(ent, PRINT_HIGH, "Invalid class name (\"%s\") given.\n", name);
+	}
+}
+
 /*
 =================
 ClientCommand
@@ -987,6 +1019,8 @@ void ClientCommand (edict_t *ent)
 		Cmd_Wave_f (ent);
 	else if (Q_stricmp(cmd, "playerlist") == 0)
 		Cmd_PlayerList_f(ent);
+	else if (Q_stricmp(cmd, "class") == 0)
+		Cmd_SwitchClass_f(ent);
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);
 }
