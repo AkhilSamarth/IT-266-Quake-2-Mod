@@ -2012,6 +2012,8 @@ void Weapon_Sniper(edict_t *ent)
 	static int	pause_frames[] = { 56, 0 };
 	static int	fire_frames[] = { 4, 0 };
 	
+	Weapon_Generic(ent, 3, 18, 56, 61, pause_frames, fire_frames, dummy_fire);
+
 	// if already fired, wait for mouse button to be released
 	if (sniperFired) {
 		if (!(ent->client->buttons & BUTTON_ATTACK)) {
@@ -2020,6 +2022,12 @@ void Weapon_Sniper(edict_t *ent)
 			sniperScoped = false;
 			sniperTimer = level.time;
 			sniperFired = false;
+
+			// speed player up to default
+			gi.cvar_set("cl_forwardspeed", "200");
+			gi.cvar_set("cl_sidespeed", "200");
+
+			return;
 		}
 		// otherwise don't do anything
 		else {
@@ -2029,25 +2037,27 @@ void Weapon_Sniper(edict_t *ent)
 
 	if (ent->client->buttons & BUTTON_ATTACK) {
 		// check if sniper is scoped and cooldown is done
-		if (!sniperScoped && (level.time - sniperTimer >= SNIPER_RESCOPE_DELAY)) {
-			// scope and reset the timer
-			sniperTimer = level.time;
-			ent->client->ps.fov = 30;
-			sniperScoped = true;
-			return;
+		if (!sniperScoped) {
+			if ((level.time - sniperTimer >= SNIPER_RESCOPE_DELAY)) {
+				// scope and reset the timer
+				sniperTimer = level.time;
+				ent->client->ps.fov = 30;
+				sniperScoped = true;
+
+				// slow down player
+				gi.cvar_set("cl_forwardspeed", "100");
+				gi.cvar_set("cl_sidespeed", "100");
+
+				return;
+			}
 		}
-		// if scoped but delay isn't complete, don't fire
-		else if (level.time - sniperTimer < SNIPER_SCOPE_DELAY) {
-			return;
-		}
-		else {
+		// if scoped and delay has completed, fire
+		else if (level.time - sniperTimer >= SNIPER_SCOPE_DELAY) {
 			// fire and set boolean
 			weapon_sniper_fire(ent);
 			sniperFired = true;
 		}
 	}
-
-	Weapon_Generic(ent, 3, 18, 56, 61, pause_frames, fire_frames, dummy_fire);
 }
 
 
