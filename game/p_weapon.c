@@ -25,6 +25,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 static qboolean	is_quad;
 static byte		is_silenced;
 
+qboolean weaponsUpgraded = false;	// keep track of whether weapons are upgraded or not
+
 
 void weapon_grenade_fire (edict_t *ent, qboolean held);
 
@@ -762,7 +764,9 @@ void Weapon_RocketLauncher_Fire (edict_t *ent)
 	int		damage;
 	float	damage_radius;
 	int		radius_damage;
+	int speed;
 
+	speed = 900;
 	damage = 90;		// lowered damage from (100 + rand(20))
 	radius_damage = 120;
 	damage_radius = 120;
@@ -777,9 +781,15 @@ void Weapon_RocketLauncher_Fire (edict_t *ent)
 	VectorScale (forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
 
+	// adjust damage and speed for upgrades
+	if (weaponsUpgraded) {
+		speed *= 2;
+		damage *= 2;
+	}
+
 	VectorSet(offset, 8, 8, ent->viewheight-8);
 	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
-	fire_rocket (ent, start, forward, damage, 900, damage_radius, radius_damage);	// 3x higher speed than default, from 300 to 900
+	fire_rocket (ent, start, forward, damage, speed, damage_radius, radius_damage);	// 3x higher speed than default, from 300 to 900
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
@@ -1446,7 +1456,6 @@ float stickyTimer = 0;	// timer for sticky launcher fuse
 qboolean pistolFired = false;	// used to make pistol semi-auto instead of automatic
 qboolean sniperScoped = false;	// checks if the sniper is currently scoped
 qboolean sniperFired = false;	// sniper has been fired and is waiting for mouse button to be released
-qboolean weaponsUpgraded = false;		// whether or not weapons have been upgraded
 
 void weapon_scattergun_fire(edict_t *ent) {
 	vec3_t		start;

@@ -937,7 +937,7 @@ qboolean weaponsUpgraded;
 
 // command to upgrade/downgrade weapons
 void Cmd_ChangeUpgrade_f(edict_t* ent) {
-	if (gi.argc > 1) {
+	if (gi.argc() > 1) {
 		gi.cprintf(ent, PRINT_HIGH, "Incorrect number (%i) of arguments supplied.\n", gi.argc());
 		return;
 	}
