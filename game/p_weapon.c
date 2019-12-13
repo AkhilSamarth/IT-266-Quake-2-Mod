@@ -766,7 +766,7 @@ void Weapon_RocketLauncher_Fire (edict_t *ent)
 	int		radius_damage;
 	int speed;
 
-	speed = 900;
+	speed = 900;		// 3x higher speed than default
 	damage = 90;		// lowered damage from (100 + rand(20))
 	radius_damage = 120;
 	damage_radius = 120;
@@ -789,7 +789,7 @@ void Weapon_RocketLauncher_Fire (edict_t *ent)
 
 	VectorSet(offset, 8, 8, ent->viewheight-8);
 	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
-	fire_rocket (ent, start, forward, damage, speed, damage_radius, radius_damage);	// 3x higher speed than default, from 300 to 900
+	fire_rocket (ent, start, forward, damage, speed, damage_radius, radius_damage);
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
@@ -1864,7 +1864,9 @@ void weapon_slowdeath_fire(edict_t *ent)
 	int		damage;
 	float	damage_radius;
 	int		radius_damage;
+	int speed;
 
+	speed = 60;		// much slower than normal rocket
 	damage = 1000;		// extremely high damage
 	radius_damage = 500;	// higher knockback too, also means that if you hit it too close to yourself, you'll die
 	damage_radius = 200;	// higher radius
@@ -1879,9 +1881,14 @@ void weapon_slowdeath_fire(edict_t *ent)
 	VectorScale(forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
 
+	// adjust speed for upgrade
+	if (weaponsUpgraded) {
+		speed *= 3;
+	}
+
 	VectorSet(offset, 8, 8, ent->viewheight - 8);
 	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
-	fire_rocket(ent, start, forward, damage, 60, damage_radius, radius_damage);	// speed changed from 300 to 60
+	fire_rocket(ent, start, forward, damage, speed, damage_radius, radius_damage);
 
 	// send muzzle flash
 	gi.WriteByte(svc_muzzleflash);
