@@ -2016,7 +2016,7 @@ void switchToDemo(edict_t* ent) {
 
 	// give class weapons
 	giveWeapon(ent, "Grenade Launcher");
-	giveWeapon(ent, "Direct Hit");
-	giveWeapon(ent, "Sticky Launcher");
+	//giveWeapon(ent, "Direct Hit");
+	//giveWeapon(ent, "Sticky Launcher");
 }
 
