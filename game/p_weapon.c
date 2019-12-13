@@ -2115,7 +2115,7 @@ void Weapon_EscapePlan(edict_t *ent)
 	escapeTimer = level.time;
 
 	const int MAX_SPEED = 300;
-	const int MIN_SPEED = 60;
+	const int MIN_SPEED = 90;
 
 	// calculate speed based on health
 	// linear function with max hp = min speed and 0 hp = max speed

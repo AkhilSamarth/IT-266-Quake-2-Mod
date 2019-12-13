@@ -1870,6 +1870,9 @@ void setSpeed(int speed) {
 // clear the inventory
 void resetInventory(gclient_t* client) {
 	memset(&client->pers.inventory, 0, sizeof(client->pers.inventory));
+
+	client->pers.selected_item = NULL;
+	client->pers.weapon = NULL;
 }
 
 // give the player the given weapon
@@ -1969,9 +1972,9 @@ void switchToSoldier(edict_t* ent) {
 	ent->health = HEALTH_SOLDIER;
 
 	// give class weapons
-	//giveWeapon(ent, "Rocket Launcher");
+	giveWeapon(ent, "Rocket Launcher");
 	giveWeapon(ent, "Blaster");
-	//giveWeapon(ent, "Slow Death");
+	giveWeapon(ent, "Slow Death");
 }
 
 void switchToSniper(edict_t* ent) {
