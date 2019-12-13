@@ -710,10 +710,11 @@ GRENADE LAUNCHER
 void weapon_grenadelauncher_fire (edict_t *ent)
 {
 	vec3_t	offset;
-	vec3_t	forward, right;
+	vec3_t	forward, right, up, upScaled, rightScaled;
 	vec3_t	start;
 	int		damage = 100;	// lower damage from 120 to 100
 	float	radius;
+	const int upgradeGrenadeNum = 5;	// how many additional grenades to fire when upgraded
 
 	radius = damage+40;
 	if (is_quad)
@@ -725,6 +726,25 @@ void weapon_grenadelauncher_fire (edict_t *ent)
 
 	VectorScale (forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
+
+	// if upgraded, launch more grenades
+	if (weaponsUpgraded) {
+		// compute the up vector
+		CrossProduct(&forward, &right, &up);
+
+		for (int i = 0; i < upgradeGrenadeNum; i++) {
+			// compute random scaled versions of up and right
+			for (int i = 0; i < 3; i++) {
+				upScaled[i] = up[i] * crandom() * 0.2;
+				rightScaled[i] = right[i] * crandom() * 0.2;
+			}
+
+			// add random spread to forward
+			VectorAdd(forward, upScaled, forward);
+			VectorAdd(forward, rightScaled, forward);
+			fire_grenade(ent, start, forward, damage, 1000, 2.5, radius);
+		}
+	}
 
 	fire_grenade (ent, start, forward, damage, 1000, 2.5, radius);		// increased grenade speed from 600 to 1000
 
@@ -2206,9 +2226,10 @@ void Weapon_Huntsman(edict_t *ent)
 void weapon_directhit_fire(edict_t *ent)
 {
 	vec3_t	offset;
-	vec3_t	forward, right;
+	vec3_t	forward, right, up, upScaled, rightScaled;
 	vec3_t	start;
 	int		damage = 200;	// increase damage to 200
+	int upgradeGrenadeNum = 5;
 	
 	if (is_quad)
 		damage *= 4;
@@ -2219,6 +2240,25 @@ void weapon_directhit_fire(edict_t *ent)
 
 	VectorScale(forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
+
+	// if upgraded, launch more grenades
+	if (weaponsUpgraded) {
+		// compute the up vector
+		CrossProduct(&forward, &right, &up);
+
+		for (int i = 0; i < upgradeGrenadeNum; i++) {
+			// compute random scaled versions of up and right
+			for (int i = 0; i < 3; i++) {
+				upScaled[i] = up[i] * crandom() * 0.2;
+				rightScaled[i] = right[i] * crandom() * 0.2;
+			}
+
+			// add random spread to forward
+			VectorAdd(forward, upScaled, forward);
+			VectorAdd(forward, rightScaled, forward);
+			fire_grenade(ent, start, forward, damage, 600, 3, 0);
+		}
+	}
 
 	fire_grenade(ent, start, forward, damage, 600, 3, 0);		// decreased radius to 0
 
