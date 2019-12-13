@@ -2286,7 +2286,7 @@ void Weapon_DirectHit(edict_t *ent)
 void weapon_sticky_launcher_fire(edict_t *ent)
 {
 	vec3_t	offset;
-	vec3_t	forward, right;
+	vec3_t	forward, right, forward2;
 	vec3_t	start;
 	int		damage = 200;
 	float	radius;
@@ -2309,9 +2309,20 @@ void weapon_sticky_launcher_fire(edict_t *ent)
 
 	// fuse length should be detonation time - time elapsed since first fire
 	// this way, all of them should explode at once
-	float fuse = STICKY_DETONATION - (level.time - stickyTimer);
+	// divide stickytime by 2 if upgraded
+	float fuse = STICKY_DETONATION / (weaponsUpgraded ? 2 : 1) - (level.time - stickyTimer);
 
-	fire_grenade(ent, start, forward, damage, 50, fuse, radius);		// decreased speed from 600 to 300
+	// if upgraded, drop an additional grenade and half the fuse
+	if (weaponsUpgraded) {
+		// drop second grenade slightly to the right to distinguish it from the first
+		for (int i = 0; i < 3; i++) {
+			forward2[i] = forward[i] + right[i] * 0.2;
+		}
+
+		fire_grenade(ent, start, forward2, damage, 50, fuse, radius);
+	}
+
+	fire_grenade(ent, start, forward, damage, 50, fuse, radius);	// very low speed so grenades are "dropped" instead of launched
 
 	gi.WriteByte(svc_muzzleflash);
 	gi.WriteShort(ent - g_edicts);
