@@ -1869,19 +1869,7 @@ void setSpeed(int speed) {
 
 // clear the inventory
 void resetInventory(gclient_t* client) {
-	// copied form InitClientPersistant and modified
-	gitem_t		*item;
-
-	memset(&client->pers, 0, sizeof(client->pers));
-
-	client->pers.max_bullets = 200;
-	client->pers.max_shells = 100;
-	client->pers.max_rockets = 50;
-	client->pers.max_grenades = 50;
-	client->pers.max_cells = 200;
-	client->pers.max_slugs = 50;
-
-	client->pers.connected = true;
+	memset(&client->pers.inventory, 0, sizeof(client->pers.inventory));
 }
 
 // give the player the given weapon
@@ -2016,7 +2004,7 @@ void switchToDemo(edict_t* ent) {
 
 	// give class weapons
 	giveWeapon(ent, "Grenade Launcher");
-	//giveWeapon(ent, "Direct Hit");
-	//giveWeapon(ent, "Sticky Launcher");
+	giveWeapon(ent, "Direct Hit");
+	giveWeapon(ent, "Sticky Launcher");
 }
 
