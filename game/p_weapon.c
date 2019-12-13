@@ -822,24 +822,31 @@ BLASTER / HYPERBLASTER
 ======================================================================
 */
 
-void Blaster_Fire (edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, int effect)
+void Blaster_Fire(edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, int effect)
 {
 	vec3_t	forward, right;
 	vec3_t	start;
 	vec3_t	offset;
+	int speed = 200;		// changed speed from 1000 to 200
 
 	if (is_quad)
 		damage *= 4;
-	AngleVectors (ent->client->v_angle, forward, right, NULL);
-	VectorSet(offset, 24, 8, ent->viewheight-8);
-	VectorAdd (offset, g_offset, offset);
-	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+	VectorSet(offset, 24, 8, ent->viewheight - 8);
+	VectorAdd(offset, g_offset, offset);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
 
-	VectorScale (forward, -2, ent->client->kick_origin);
+	VectorScale(forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
 
 	damage *= 5;	// double original blaster damage
-	fire_blaster (ent, start, forward, damage, 200, effect, hyper);		// changed speed from 1000 to 200
+
+	// adjust speed for upgrade
+	if (weaponsUpgraded) {
+		speed *= 4;
+	}
+
+	fire_blaster (ent, start, forward, damage, 200, effect, hyper);
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
