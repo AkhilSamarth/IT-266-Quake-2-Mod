@@ -1969,9 +1969,9 @@ void switchToSoldier(edict_t* ent) {
 	ent->health = HEALTH_SOLDIER;
 
 	// give class weapons
-	giveWeapon(ent, "Rocket Launcher");
+	//giveWeapon(ent, "Rocket Launcher");
 	giveWeapon(ent, "Blaster");
-	giveWeapon(ent, "Slow Death");
+	//giveWeapon(ent, "Slow Death");
 }
 
 void switchToSniper(edict_t* ent) {
