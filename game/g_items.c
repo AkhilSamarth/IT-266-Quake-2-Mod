@@ -1419,9 +1419,9 @@ always owned, never in the world
 	{
 		"ammo_grenades",
 		Pickup_Ammo,
-		Use_Weapon,
+		NULL,
 		Drop_Ammo,
-		Weapon_Grenade,
+		NULL,
 		"misc/am_pkup.wav",
 		"models/items/ammo/grenades/medium/tris.md2", 0,
 		"models/weapons/v_handgr/tris.md2",

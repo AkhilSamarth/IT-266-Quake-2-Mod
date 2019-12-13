@@ -2006,7 +2006,7 @@ void switchToDemo(edict_t* ent) {
 	ent->health = HEALTH_DEMO;
 
 	// give class weapons
-	giveWeapon(ent, "Grenade Launcher");
+	//giveWeapon(ent, "Grenade Launcher");
 	giveWeapon(ent, "Direct Hit");
 	giveWeapon(ent, "Sticky Launcher");
 }
