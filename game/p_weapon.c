@@ -1446,6 +1446,7 @@ float stickyTimer = 0;	// timer for sticky launcher fuse
 qboolean pistolFired = false;	// used to make pistol semi-auto instead of automatic
 qboolean sniperScoped = false;	// checks if the sniper is currently scoped
 qboolean sniperFired = false;	// sniper has been fired and is waiting for mouse button to be released
+qboolean weaponsUpgraded = false;		// whether or not weapons have been upgraded
 
 // isSecondFire tells function is this is the scattergun's first or second fire
 void weapon_scattergun_fire(edict_t *ent) {
