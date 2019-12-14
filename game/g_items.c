@@ -49,6 +49,9 @@ void Weapon_Huntsman(edict_t* ent);
 void Weapon_DirectHit(edict_t* ent);
 void Weapon_StickyLauncher(edict_t* ent);
 
+// intel functions
+qboolean Pickup_Intel(edict_t *ent, edict_t *other);
+
 gitem_armor_t jacketarmor_info	= { 25,  50, .30, .00, ARMOR_JACKET};
 gitem_armor_t combatarmor_info	= { 50, 100, .60, .30, ARMOR_COMBAT};
 gitem_armor_t bodyarmor_info	= {100, 200, .80, .60, ARMOR_BODY};
@@ -2315,7 +2318,7 @@ tank commander's head
 		/* precache */ "weapons/rg_hum.wav"
 	},
 
-	{
+	{	// demo weapon
 		"weapon_directhit",
 		Pickup_Weapon,
 		Use_Weapon,
@@ -2336,7 +2339,7 @@ tank commander's head
 		/* precache */ "models/objects/grenade/tris.md2 weapons/grenlf1a.wav weapons/grenlr1b.wav weapons/grenlb1b.wav"
 	},
 
-	{
+	{	// demo weapon
 		"weapon_stickylauncher",
 		Pickup_Weapon,
 		Use_Weapon,
@@ -2357,12 +2360,47 @@ tank commander's head
 		/* precache */ "models/objects/grenade/tris.md2 weapons/grenlf1a.wav weapons/grenlr1b.wav weapons/grenlb1b.wav"
 	},
 
+	{	// intel
+		"intelligence",
+		Pickup_Intel,
+		NULL,
+		NULL,
+		NULL,
+		"items/pkup.wav",
+		"models/items/pack/tris.md2", EF_ROTATE,
+		NULL,
+		/* icon */		"i_pack",
+		/* pickup */	"Intel",
+		/* width */		2,
+		180,
+		NULL,
+		0,
+		0,
+		NULL,
+		0,
+		/* precache */ ""
+	},
+
 	// =========== end of custom items for mod ===========
 
 	// end of list marker
 	{NULL}
 };
 
+// intel pickup function
+qboolean Pickup_Intel(edict_t* ent, edict_t* other) {
+	gi.dprintf("pickup intel");
+	return true;
+}
+
+// intel spawn function, copied from SP_item_health
+void SP_intel(edict_t *self) {
+	self->model = "models/items/pack/tris.md2";
+	SpawnItem(self, FindItem("Intel"));
+	gi.soundindex("items/n_health.wav");
+
+	gi.dprintf("intel spawn called");
+}
 
 /*QUAKED item_health (.3 .3 1) (-16 -16 -16) (16 16 16)
 */

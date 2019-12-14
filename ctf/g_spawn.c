@@ -144,6 +144,9 @@ void SP_turret_breach (edict_t *self);
 void SP_turret_base (edict_t *self);
 void SP_turret_driver (edict_t *self);
 
+// intel spawn
+void SP_intel(edict_t* self);
+
 
 spawn_t	spawns[] = {
 	{"item_health", SP_item_health},
@@ -253,6 +256,8 @@ spawn_t	spawns[] = {
 	{"misc_eastertank", SP_misc_eastertank},
 	{"misc_easterchick", SP_misc_easterchick},
 	{"misc_easterchick2", SP_misc_easterchick2},
+
+	{"intelligence", SP_intel},	// intel spawn
 
 #if 0 // remove monster code
 	{"monster_berserk", SP_monster_berserk},

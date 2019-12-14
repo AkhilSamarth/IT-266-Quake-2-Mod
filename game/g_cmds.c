@@ -951,6 +951,16 @@ void Cmd_ChangeUpgrade_f(edict_t* ent) {
 	}
 }
 
+// defined in g_items.c
+edict_t* Drop_Item(edict_t* ent, gitem_t* item);
+
+// command to spawn intel
+void Cmd_SpawnIntel_f(edict_t* ent) {
+	// get intel item
+	gitem_t* item = FindItem("Intel");
+	Drop_Item(ent, item);
+}
+
 /*
 =================
 ClientCommand
@@ -1042,6 +1052,8 @@ void ClientCommand (edict_t *ent)
 		Cmd_SwitchClass_f(ent);
 	else if (Q_stricmp(cmd, "upgrade") == 0 || Q_stricmp(cmd, "downgrade") == 0)
 		Cmd_ChangeUpgrade_f(ent);
+	else if (Q_stricmp(cmd, "intel") == 0)
+		Cmd_SpawnIntel_f(ent);
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);
 }
