@@ -1248,7 +1248,7 @@ void weapon_shotgun_fire (edict_t *ent)
 	}
 
 	// 3x higher spread than default shotgun
-	fire_shotgun (ent, start, forward, damage, kick, 1500, 1500, weaponsUpgraded ? upgradeBulletCount : DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
+	fire_shotgun (ent, start, forward, damage, kick, 1500, 1500, (weaponsUpgraded ? upgradeBulletCount : DEFAULT_SHOTGUN_COUNT), MOD_SHOTGUN);
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
@@ -1813,6 +1813,7 @@ void weapon_SMG_fire(edict_t *ent)
 	int			damage = 8;
 	int			kick = 2;
 	vec3_t		offset;
+	const int upgradeBulletCount = 3;	// how many bullets to fire per shot when upgraded
 
 	if (!(ent->client->buttons & BUTTON_ATTACK))
 	{
@@ -1869,7 +1870,11 @@ void weapon_SMG_fire(edict_t *ent)
 	AngleVectors(angles, forward, right, NULL);
 	VectorSet(offset, 0, 8, ent->viewheight - 8);
 	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
-	fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+	
+	// fire multiple times when upgraded
+	for (int i = 0; i < (weaponsUpgraded ? upgradeBulletCount : 1); i++) {
+		fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+	}
 
 	gi.WriteByte(svc_muzzleflash);
 	gi.WriteShort(ent - g_edicts);
@@ -2110,7 +2115,7 @@ void Weapon_Sniper(edict_t *ent)
 			if ((level.time - sniperTimer >= SNIPER_RESCOPE_DELAY)) {
 				// scope and reset the timer
 				sniperTimer = level.time;
-				ent->client->ps.fov = weaponsUpgraded ? upgradeScopeFOV : scopeFOV;
+				ent->client->ps.fov = (weaponsUpgraded ? upgradeScopeFOV : scopeFOV);
 				sniperScoped = true;
 
 				// slow down player
