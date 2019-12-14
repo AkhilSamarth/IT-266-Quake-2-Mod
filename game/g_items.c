@@ -2393,15 +2393,6 @@ qboolean Pickup_Intel(edict_t* ent, edict_t* other) {
 	return true;
 }
 
-// intel spawn function, copied from SP_item_health
-void SP_intel(edict_t *self) {
-	self->model = "models/items/pack/tris.md2";
-	SpawnItem(self, FindItem("Intel"));
-	gi.soundindex("items/n_health.wav");
-
-	gi.dprintf("intel spawn called");
-}
-
 /*QUAKED item_health (.3 .3 1) (-16 -16 -16) (16 16 16)
 */
 void SP_item_health (edict_t *self)

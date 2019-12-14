@@ -1790,7 +1790,6 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 	playerMaxHealth = ent->max_health;
 }
 
-
 /*
 ==============
 ClientBeginServerFrame
