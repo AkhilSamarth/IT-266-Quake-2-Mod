@@ -2074,6 +2074,10 @@ void dummy_fire(edict_t* ent) {}
 
 void Weapon_Sniper(edict_t *ent)
 {
+	// FOVs for normal and upgraded sniper
+	const int scopeFOV = 50;	
+	const int upgradeScopeFOV = 30;
+
 	static int	pause_frames[] = { 56, 0 };
 	static int	fire_frames[] = { 4, 0 };
 	
@@ -2106,7 +2110,7 @@ void Weapon_Sniper(edict_t *ent)
 			if ((level.time - sniperTimer >= SNIPER_RESCOPE_DELAY)) {
 				// scope and reset the timer
 				sniperTimer = level.time;
-				ent->client->ps.fov = 30;
+				ent->client->ps.fov = weaponsUpgraded ? upgradeScopeFOV : scopeFOV;
 				sniperScoped = true;
 
 				// slow down player
