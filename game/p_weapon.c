@@ -2160,6 +2160,8 @@ void weapon_escape_plan_fire(edict_t *ent)
 
 void Weapon_EscapePlan(edict_t *ent)
 {
+	const float upgradeModifier = 2;	// how much to multiply speed when upgraded
+
 	static int	pause_frames[] = { 22, 28, 34, 0 };
 	static int	fire_frames[] = { 8, 9, 0 };
 
@@ -2172,7 +2174,7 @@ void Weapon_EscapePlan(edict_t *ent)
 	// calculate speed based on health
 	// linear function with max hp = min speed and 0 hp = max speed
 	float slope = 1.0f * (MIN_SPEED - MAX_SPEED) / playerMaxHealth;
-	int speed = (int)(slope * playerHealth + MAX_SPEED);
+	int speed = (int)((slope * playerHealth + MAX_SPEED) * (weaponsUpgraded ? upgradeModifier : 1));
 
 	char* speedStr;
 	itoa(speed, speedStr, 10);
