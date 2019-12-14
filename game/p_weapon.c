@@ -1559,6 +1559,7 @@ void weapon_minigun_fire(edict_t *ent)
 	vec3_t		offset;
 	int			damage;
 	int			kick = 2;
+	const int upgradedBulletNum = 5;	// number of additional bullets to fire if upgraded
 
 	damage = 8;
 
@@ -1658,6 +1659,13 @@ void weapon_minigun_fire(edict_t *ent)
 		P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
 
 		fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_CHAINGUN);
+
+		// if upgraded, fire more bullets
+		if (weaponsUpgraded) {
+			for (int i = 0; i < upgradedBulletNum; i++) {
+				fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD * 1.5, DEFAULT_BULLET_VSPREAD * 1.5, MOD_CHAINGUN);
+			}
+		}
 	}
 
 	// send muzzle flash
