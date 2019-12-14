@@ -49,7 +49,8 @@ void Weapon_Huntsman(edict_t* ent);
 void Weapon_DirectHit(edict_t* ent);
 void Weapon_StickyLauncher(edict_t* ent);
 
-// intel functions
+// intel stuff
+qboolean carryingIntel;		// defined in p_client.c
 qboolean Pickup_Intel(edict_t *ent, edict_t *other);
 
 gitem_armor_t jacketarmor_info	= { 25,  50, .30, .00, ARMOR_JACKET};
@@ -2391,8 +2392,16 @@ tank commander's head
 qboolean Pickup_Intel(edict_t* ent, edict_t* other) {
 
 	// print coords of intel, helpful for positioning it
-	gi.dprintf("item coords: %f, %f, %f\n", ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
-	return true;
+	//gi.dprintf("item coords: %f, %f, %f\n", ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
+	
+	// give player the intel if they're not already holding it
+	if (carryingIntel) {
+		return false;
+	}
+	else {
+		carryingIntel = true;
+		return true;
+	}
 }
 
 /*QUAKED item_health (.3 .3 1) (-16 -16 -16) (16 16 16)

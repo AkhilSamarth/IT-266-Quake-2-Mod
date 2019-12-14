@@ -20,13 +20,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 #include "m_player.h"
 
-// avoid magic nums
+// class speed
 #define SPEED_SCOUT 400
 #define SPEED_SOLDIER 150
 #define SPEED_SNIPER 200
 #define SPEED_DEMO 180
 #define SPEED_HEAVY 100
 
+// class max health
 #define HEALTH_SCOUT 125
 #define HEALTH_SOLDIER 200
 #define HEALTH_SNIPER 175
@@ -35,9 +36,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define ESCAPE_DELAY 0.5	// time after dequipping escape plan to return speed to normal
 
+#define WIN_SCORE 3		// number of intels that need to submitted for a victory
+
 // enum to keep track of player's current class
 typedef enum class { NOT_SET, SCOUT, SOLDIER, SNIPER, DEMO, HEAVY } class_t;
 class_t currentClass = NOT_SET;
+
+// intel/ctf stuff
+qboolean intelNeeded = true;		// whether or not the game should spawn new intel
+qboolean carryingIntel = false;		// whether or not the player is currently holding intel
+int score = 0;		// how many intels have been submitted
+void spawnItem(char* pickupName, float x, float y, float z);
 
 void ClientUserinfoChanged (edict_t *ent, char *userinfo);
 
@@ -1789,10 +1798,6 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 	playerHealth = ent->health;
 	playerMaxHealth = ent->max_health;
 }
-
-// intel spawning stuff
-qboolean intelNeeded = true;
-void spawnItem(char* pickupName, float x, float y, float z);
 
 /*
 ==============
