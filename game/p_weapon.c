@@ -1491,6 +1491,8 @@ void weapon_scattergun_fire(edict_t *ent) {
 	vec3_t		offset;
 	int			damage = 4;
 	int			kick = 8;
+	int spread;
+	const int upgradeSpread = 500;		// spread to use when upgraded
 
 	if (ent->client->ps.gunframe == 9)
 	{
@@ -1512,8 +1514,10 @@ void weapon_scattergun_fire(edict_t *ent) {
 		kick *= 4;
 	}
 
-	// shotgun fire function with slightly modified values
-	fire_shotgun(ent, start, forward, damage, kick, 400, 400, SCATTERGUN_COUNT, MOD_SHOTGUN);		// default spread 500
+	// set spread based on upgrade
+	spread = weaponsUpgraded ? upgradeSpread : 800;
+
+	fire_shotgun(ent, start, forward, damage, kick, spread, spread, SCATTERGUN_COUNT, MOD_SHOTGUN);
 
 	// send muzzle flash
 	gi.WriteByte(svc_muzzleflash);
