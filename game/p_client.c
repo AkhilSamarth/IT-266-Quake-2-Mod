@@ -1936,9 +1936,9 @@ void switchToScout(edict_t* ent) {
 	ent->health = HEALTH_SCOUT;
 
 	// give class weapons
-	giveWeapon(ent, "Scattergun");
-	giveWeapon(ent, "Pistol");
 	giveWeapon(ent, "Panic Attack");
+	giveWeapon(ent, "Pistol");
+	giveWeapon(ent, "Scattergun");
 }
 
 
@@ -1954,9 +1954,9 @@ void switchToHeavy(edict_t* ent) {
 	ent->health = HEALTH_HEAVY;
 
 	// give class weapons
-	giveWeapon(ent, "Minigun");
-	giveWeapon(ent, "Shotgun");
 	giveWeapon(ent, "Escape Plan");
+	giveWeapon(ent, "Shotgun");
+	giveWeapon(ent, "Minigun");
 }
 
 void switchToSoldier(edict_t* ent) {
@@ -1972,9 +1972,9 @@ void switchToSoldier(edict_t* ent) {
 	ent->health = HEALTH_SOLDIER;
 
 	// give class weapons
-	giveWeapon(ent, "Rocket Launcher");
-	giveWeapon(ent, "Blaster");
 	giveWeapon(ent, "Slow Death");
+	giveWeapon(ent, "Blaster");
+	giveWeapon(ent, "Rocket Launcher");
 }
 
 void switchToSniper(edict_t* ent) {
@@ -1989,9 +1989,9 @@ void switchToSniper(edict_t* ent) {
 	ent->health = HEALTH_SNIPER;
 
 	// give class weapons
-	giveWeapon(ent, "Sniper Rifle");
-	giveWeapon(ent, "SMG");
 	giveWeapon(ent, "Huntsman");
+	giveWeapon(ent, "SMG");
+	giveWeapon(ent, "Sniper Rifle");
 }
 
 void switchToDemo(edict_t* ent) {
@@ -2006,8 +2006,8 @@ void switchToDemo(edict_t* ent) {
 	ent->health = HEALTH_DEMO;
 
 	// give class weapons
-	//giveWeapon(ent, "Grenade Launcher");
-	giveWeapon(ent, "Direct Hit");
 	giveWeapon(ent, "Sticky Launcher");
+	giveWeapon(ent, "Direct Hit");
+	giveWeapon(ent, "Grenade Launcher");
 }
 
