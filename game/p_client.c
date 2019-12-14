@@ -1790,6 +1790,10 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 	playerMaxHealth = ent->max_health;
 }
 
+// intel spawning stuff
+qboolean intelNeeded = true;
+void spawnItem(char* pickupName, float x, float y, float z);
+
 /*
 ==============
 ClientBeginServerFrame
@@ -1853,6 +1857,12 @@ void ClientBeginServerFrame (edict_t *ent)
 			PlayerTrail_Add (ent->s.old_origin);
 
 	client->latched_buttons = 0;
+
+	// spawn intel if needed
+	if (intelNeeded) {
+		spawnItem("Intel", 12.92, 65.04, 25);		// remember to add 10 to vertical coord (z) to prevent item from falling through floor
+		intelNeeded = false;
+	}
 }
 
 // stuff related to classes below
@@ -2008,5 +2018,41 @@ void switchToDemo(edict_t* ent) {
 	giveWeapon(ent, "Sticky Launcher");
 	giveWeapon(ent, "Direct Hit");
 	giveWeapon(ent, "Grenade Launcher");
+}
+
+// defined in g_items.c
+void drop_temp_touch(edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf);
+void drop_make_touchable(edict_t *ent);
+
+// spawn item at a given coordinate, copied from Drop_Item and modified
+void spawnItem(char* pickupName, float x, float y, float z) {
+	edict_t	*dropped;
+	vec3_t	forward, right;
+	vec3_t	offset;
+	gitem_t* item;
+
+	item = FindItem(pickupName);
+
+	dropped = G_Spawn();
+
+	dropped->classname = item->classname;
+	dropped->item = item;
+	dropped->spawnflags = DROPPED_ITEM;
+	dropped->s.effects = item->world_model_flags;
+	dropped->s.renderfx = RF_GLOW;
+	VectorSet(dropped->mins, -15, -15, -15);
+	VectorSet(dropped->maxs, 15, 15, 15);
+	gi.setmodel(dropped, dropped->item->world_model);
+	dropped->solid = SOLID_TRIGGER;
+	dropped->movetype = MOVETYPE_TOSS;
+	dropped->touch = drop_temp_touch;
+
+	dropped->think = drop_make_touchable;
+	dropped->nextthink = level.time + 1;
+
+	// set position of intel
+	VectorSet(dropped->s.origin, x, y, z);
+
+	gi.linkentity(dropped);
 }
 

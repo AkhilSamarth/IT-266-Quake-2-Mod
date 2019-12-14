@@ -838,7 +838,7 @@ void Touch_Item (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf
 
 //======================================================================
 
-static void drop_temp_touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf)
+void drop_temp_touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf)
 {
 	if (other == ent->owner)
 		return;
@@ -846,7 +846,7 @@ static void drop_temp_touch (edict_t *ent, edict_t *other, cplane_t *plane, csur
 	Touch_Item (ent, other, plane, surf);
 }
 
-static void drop_make_touchable (edict_t *ent)
+void drop_make_touchable (edict_t *ent)
 {
 	ent->touch = Touch_Item;
 	if (deathmatch->value)
@@ -2389,7 +2389,9 @@ tank commander's head
 
 // intel pickup function
 qboolean Pickup_Intel(edict_t* ent, edict_t* other) {
-	gi.dprintf("pickup intel");
+
+	// print coords of intel, helpful for positioning it
+	gi.dprintf("item coords: %f, %f, %f\n", ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
 	return true;
 }
 
