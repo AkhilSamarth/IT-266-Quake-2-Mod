@@ -2194,6 +2194,7 @@ void weapon_huntsman_fire(edict_t *ent)
 	vec3_t		offset;
 	int			damage;
 	int			kick;
+	int speed = 500;
 
 	damage = 80;
 	kick = 200;
@@ -2209,9 +2210,14 @@ void weapon_huntsman_fire(edict_t *ent)
 	VectorScale(forward, -3, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -3;
 
+	// double projectile speed if upgraded
+	if (weaponsUpgraded) {
+		speed *= 2;
+	}
+
 	VectorSet(offset, 0, 7, ent->viewheight - 8);
 	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
-	fire_blaster(ent, start, forward, damage, 800, EF_BLASTER, false);
+	fire_blaster(ent, start, forward, damage, speed, EF_BLASTER, false);
 
 	// send muzzle flash
 	gi.WriteByte(svc_muzzleflash);
