@@ -25,6 +25,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 static qboolean	is_quad;
 static byte		is_silenced;
 
+qboolean weaponsUpgraded = false;	// keep track of whether weapons are upgraded or not
+
 
 void weapon_grenade_fire (edict_t *ent, qboolean held);
 
@@ -708,10 +710,11 @@ GRENADE LAUNCHER
 void weapon_grenadelauncher_fire (edict_t *ent)
 {
 	vec3_t	offset;
-	vec3_t	forward, right;
+	vec3_t	forward, right, up, upScaled, rightScaled;
 	vec3_t	start;
 	int		damage = 100;	// lower damage from 120 to 100
 	float	radius;
+	const int upgradeGrenadeNum = 5;	// how many additional grenades to fire when upgraded
 
 	radius = damage+40;
 	if (is_quad)
@@ -723,6 +726,25 @@ void weapon_grenadelauncher_fire (edict_t *ent)
 
 	VectorScale (forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
+
+	// if upgraded, launch more grenades
+	if (weaponsUpgraded) {
+		// compute the up vector
+		CrossProduct(&forward, &right, &up);
+
+		for (int i = 0; i < upgradeGrenadeNum; i++) {
+			// compute random scaled versions of up and right
+			for (int i = 0; i < 3; i++) {
+				upScaled[i] = up[i] * crandom() * 0.2;
+				rightScaled[i] = right[i] * crandom() * 0.2;
+			}
+
+			// add random spread to forward
+			VectorAdd(forward, upScaled, forward);
+			VectorAdd(forward, rightScaled, forward);
+			fire_grenade(ent, start, forward, damage, 1000, 2.5, radius);
+		}
+	}
 
 	fire_grenade (ent, start, forward, damage, 1000, 2.5, radius);		// increased grenade speed from 600 to 1000
 
@@ -762,7 +784,9 @@ void Weapon_RocketLauncher_Fire (edict_t *ent)
 	int		damage;
 	float	damage_radius;
 	int		radius_damage;
+	int speed;
 
+	speed = 900;		// 3x higher speed than default
 	damage = 90;		// lowered damage from (100 + rand(20))
 	radius_damage = 120;
 	damage_radius = 120;
@@ -777,9 +801,15 @@ void Weapon_RocketLauncher_Fire (edict_t *ent)
 	VectorScale (forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
 
+	// adjust damage and speed for upgrades
+	if (weaponsUpgraded) {
+		speed *= 2;
+		damage *= 2;
+	}
+
 	VectorSet(offset, 8, 8, ent->viewheight-8);
 	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
-	fire_rocket (ent, start, forward, damage, 900, damage_radius, radius_damage);	// 3x higher speed than default, from 300 to 900
+	fire_rocket (ent, start, forward, damage, speed, damage_radius, radius_damage);
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
@@ -812,24 +842,31 @@ BLASTER / HYPERBLASTER
 ======================================================================
 */
 
-void Blaster_Fire (edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, int effect)
+void Blaster_Fire(edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, int effect)
 {
 	vec3_t	forward, right;
 	vec3_t	start;
 	vec3_t	offset;
+	int speed = 200;		// changed speed from 1000 to 200
 
 	if (is_quad)
 		damage *= 4;
-	AngleVectors (ent->client->v_angle, forward, right, NULL);
-	VectorSet(offset, 24, 8, ent->viewheight-8);
-	VectorAdd (offset, g_offset, offset);
-	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+	VectorSet(offset, 24, 8, ent->viewheight - 8);
+	VectorAdd(offset, g_offset, offset);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
 
-	VectorScale (forward, -2, ent->client->kick_origin);
+	VectorScale(forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
 
 	damage *= 5;	// double original blaster damage
-	fire_blaster (ent, start, forward, damage, 200, effect, hyper);		// changed speed from 1000 to 200
+
+	// adjust speed for upgrade
+	if (weaponsUpgraded) {
+		speed *= 4;
+	}
+
+	fire_blaster (ent, start, forward, damage, 200, effect, hyper);
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
@@ -1188,6 +1225,7 @@ void weapon_shotgun_fire (edict_t *ent)
 	vec3_t		offset;
 	int			damage = 6;		// higher damage to match TF2
 	int			kick = 8;
+	const int upgradeBulletCount = 36;		// 3x as many bullets fired on upgrade
 
 	if (ent->client->ps.gunframe == 9)
 	{
@@ -1210,7 +1248,7 @@ void weapon_shotgun_fire (edict_t *ent)
 	}
 
 	// 3x higher spread than default shotgun
-	fire_shotgun (ent, start, forward, damage, kick, 1500, 1500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
+	fire_shotgun (ent, start, forward, damage, kick, 1500, 1500, (weaponsUpgraded ? upgradeBulletCount : DEFAULT_SHOTGUN_COUNT), MOD_SHOTGUN);
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
@@ -1447,13 +1485,14 @@ qboolean pistolFired = false;	// used to make pistol semi-auto instead of automa
 qboolean sniperScoped = false;	// checks if the sniper is currently scoped
 qboolean sniperFired = false;	// sniper has been fired and is waiting for mouse button to be released
 
-// isSecondFire tells function is this is the scattergun's first or second fire
 void weapon_scattergun_fire(edict_t *ent) {
 	vec3_t		start;
 	vec3_t		forward, right;
 	vec3_t		offset;
 	int			damage = 4;
 	int			kick = 8;
+	int spread;
+	const int upgradeSpread = 500;		// spread to use when upgraded
 
 	if (ent->client->ps.gunframe == 9)
 	{
@@ -1475,8 +1514,10 @@ void weapon_scattergun_fire(edict_t *ent) {
 		kick *= 4;
 	}
 
-	// shotgun fire function with slightly modified values
-	fire_shotgun(ent, start, forward, damage, kick, 400, 400, SCATTERGUN_COUNT, MOD_SHOTGUN);		// default spread 500
+	// set spread based on upgrade
+	spread = weaponsUpgraded ? upgradeSpread : 800;
+
+	fire_shotgun(ent, start, forward, damage, kick, spread, spread, SCATTERGUN_COUNT, MOD_SHOTGUN);
 
 	// send muzzle flash
 	gi.WriteByte(svc_muzzleflash);
@@ -1523,6 +1564,7 @@ void weapon_minigun_fire(edict_t *ent)
 	vec3_t		offset;
 	int			damage;
 	int			kick = 2;
+	const int upgradedBulletNum = 5;	// number of additional bullets to fire if upgraded
 
 	damage = 8;
 
@@ -1622,6 +1664,13 @@ void weapon_minigun_fire(edict_t *ent)
 		P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
 
 		fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_CHAINGUN);
+
+		// if upgraded, fire more bullets
+		if (weaponsUpgraded) {
+			for (int i = 0; i < upgradedBulletNum; i++) {
+				fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD * 1.5, DEFAULT_BULLET_VSPREAD * 1.5, MOD_CHAINGUN);
+			}
+		}
 	}
 
 	// send muzzle flash
@@ -1653,6 +1702,7 @@ void weapon_pistol_fire(edict_t *ent)
 	int			damage = 8;
 	int			kick = 2;
 	vec3_t		offset;
+	const int upgradeBulletCount = 3;		// how many bullets to fire in a single shot when upgraded
 
 	// if pistol has been fired, don't fire again until boolean is reset
 	if (pistolFired) {
@@ -1717,7 +1767,15 @@ void weapon_pistol_fire(edict_t *ent)
 	AngleVectors(angles, forward, right, NULL);
 	VectorSet(offset, 0, 8, ent->viewheight - 8);
 	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
-	fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+	
+	// double damage if upgraded
+	damage *= weaponsUpgraded ? 2 : 1;
+
+	// fire multiple times if upgraded
+	for (int i = 0; i < (weaponsUpgraded ? upgradeBulletCount : 1); i++) {
+		fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+	}
+
 
 	gi.WriteByte(svc_muzzleflash);
 	gi.WriteShort(ent - g_edicts);
@@ -1759,6 +1817,7 @@ void weapon_SMG_fire(edict_t *ent)
 	int			damage = 8;
 	int			kick = 2;
 	vec3_t		offset;
+	const int upgradeBulletCount = 3;	// how many bullets to fire per shot when upgraded
 
 	if (!(ent->client->buttons & BUTTON_ATTACK))
 	{
@@ -1815,7 +1874,11 @@ void weapon_SMG_fire(edict_t *ent)
 	AngleVectors(angles, forward, right, NULL);
 	VectorSet(offset, 0, 8, ent->viewheight - 8);
 	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
-	fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+	
+	// fire multiple times when upgraded
+	for (int i = 0; i < (weaponsUpgraded ? upgradeBulletCount : 1); i++) {
+		fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+	}
 
 	gi.WriteByte(svc_muzzleflash);
 	gi.WriteShort(ent - g_edicts);
@@ -1855,7 +1918,9 @@ void weapon_slowdeath_fire(edict_t *ent)
 	int		damage;
 	float	damage_radius;
 	int		radius_damage;
+	int speed;
 
+	speed = 60;		// much slower than normal rocket
 	damage = 1000;		// extremely high damage
 	radius_damage = 500;	// higher knockback too, also means that if you hit it too close to yourself, you'll die
 	damage_radius = 200;	// higher radius
@@ -1870,9 +1935,14 @@ void weapon_slowdeath_fire(edict_t *ent)
 	VectorScale(forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
 
+	// adjust speed for upgrade
+	if (weaponsUpgraded) {
+		speed *= 3;
+	}
+
 	VectorSet(offset, 8, 8, ent->viewheight - 8);
 	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
-	fire_rocket(ent, start, forward, damage, 60, damage_radius, radius_damage);	// speed changed from 300 to 60
+	fire_rocket(ent, start, forward, damage, speed, damage_radius, radius_damage);
 
 	// send muzzle flash
 	gi.WriteByte(svc_muzzleflash);
@@ -1903,6 +1973,7 @@ void weapon_panicattack_fire(edict_t *ent)
 	vec3_t		offset;
 	int			damage = 6;		// higher damage to match TF2
 	int			kick = 8;
+	const float upgradeSpreadModifier = 2;		// modifier for spread when upgraded 
 
 	const int MAX_SPREAD = 5000;
 	const int MIN_SPREAD = 50;
@@ -1935,8 +2006,8 @@ void weapon_panicattack_fire(edict_t *ent)
 	// calculate spread based on health
 	// linear function with max hp = max spread and 0 hp = min spread
 	float slope = 1.0f * (MAX_SPREAD - MIN_SPREAD) / playerMaxHealth;
-	int spread = (int) (slope * playerHealth + MIN_SPREAD);
-	
+	int spread = (int) ((slope * playerHealth + MIN_SPREAD) / (weaponsUpgraded ? upgradeSpreadModifier : 1));
+
 	fire_shotgun(ent, start, forward, damage, kick, spread, spread, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
 
 	// send muzzle flash
@@ -2012,6 +2083,10 @@ void dummy_fire(edict_t* ent) {}
 
 void Weapon_Sniper(edict_t *ent)
 {
+	// FOVs for normal and upgraded sniper
+	const int scopeFOV = 50;	
+	const int upgradeScopeFOV = 30;
+
 	static int	pause_frames[] = { 56, 0 };
 	static int	fire_frames[] = { 4, 0 };
 	
@@ -2044,7 +2119,7 @@ void Weapon_Sniper(edict_t *ent)
 			if ((level.time - sniperTimer >= SNIPER_RESCOPE_DELAY)) {
 				// scope and reset the timer
 				sniperTimer = level.time;
-				ent->client->ps.fov = 30;
+				ent->client->ps.fov = (weaponsUpgraded ? upgradeScopeFOV : scopeFOV);
 				sniperScoped = true;
 
 				// slow down player
@@ -2108,6 +2183,8 @@ void weapon_escape_plan_fire(edict_t *ent)
 
 void Weapon_EscapePlan(edict_t *ent)
 {
+	const float upgradeModifier = 2;	// how much to multiply speed when upgraded
+
 	static int	pause_frames[] = { 22, 28, 34, 0 };
 	static int	fire_frames[] = { 8, 9, 0 };
 
@@ -2115,12 +2192,12 @@ void Weapon_EscapePlan(edict_t *ent)
 	escapeTimer = level.time;
 
 	const int MAX_SPEED = 300;
-	const int MIN_SPEED = 60;
+	const int MIN_SPEED = 90;
 
 	// calculate speed based on health
 	// linear function with max hp = min speed and 0 hp = max speed
 	float slope = 1.0f * (MIN_SPEED - MAX_SPEED) / playerMaxHealth;
-	int speed = (int)(slope * playerHealth + MAX_SPEED);
+	int speed = (int)((slope * playerHealth + MAX_SPEED) * (weaponsUpgraded ? upgradeModifier : 1));
 
 	char* speedStr;
 	itoa(speed, speedStr, 10);
@@ -2139,6 +2216,7 @@ void weapon_huntsman_fire(edict_t *ent)
 	vec3_t		offset;
 	int			damage;
 	int			kick;
+	int speed = 500;
 
 	damage = 80;
 	kick = 200;
@@ -2154,9 +2232,14 @@ void weapon_huntsman_fire(edict_t *ent)
 	VectorScale(forward, -3, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -3;
 
+	// double projectile speed if upgraded
+	if (weaponsUpgraded) {
+		speed *= 2;
+	}
+
 	VectorSet(offset, 0, 7, ent->viewheight - 8);
 	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
-	fire_blaster(ent, start, forward, damage, 800, EF_BLASTER, false);
+	fire_blaster(ent, start, forward, damage, speed, EF_BLASTER, false);
 
 	// send muzzle flash
 	gi.WriteByte(svc_muzzleflash);
@@ -2183,9 +2266,10 @@ void Weapon_Huntsman(edict_t *ent)
 void weapon_directhit_fire(edict_t *ent)
 {
 	vec3_t	offset;
-	vec3_t	forward, right;
+	vec3_t	forward, right, up, upScaled, rightScaled;
 	vec3_t	start;
 	int		damage = 200;	// increase damage to 200
+	int upgradeGrenadeNum = 5;
 	
 	if (is_quad)
 		damage *= 4;
@@ -2196,6 +2280,25 @@ void weapon_directhit_fire(edict_t *ent)
 
 	VectorScale(forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
+
+	// if upgraded, launch more grenades
+	if (weaponsUpgraded) {
+		// compute the up vector
+		CrossProduct(&forward, &right, &up);
+
+		for (int i = 0; i < upgradeGrenadeNum; i++) {
+			// compute random scaled versions of up and right
+			for (int i = 0; i < 3; i++) {
+				upScaled[i] = up[i] * crandom() * 0.2;
+				rightScaled[i] = right[i] * crandom() * 0.2;
+			}
+
+			// add random spread to forward
+			VectorAdd(forward, upScaled, forward);
+			VectorAdd(forward, rightScaled, forward);
+			fire_grenade(ent, start, forward, damage, 600, 3, 0);
+		}
+	}
 
 	fire_grenade(ent, start, forward, damage, 600, 3, 0);		// decreased radius to 0
 
@@ -2223,7 +2326,7 @@ void Weapon_DirectHit(edict_t *ent)
 void weapon_sticky_launcher_fire(edict_t *ent)
 {
 	vec3_t	offset;
-	vec3_t	forward, right;
+	vec3_t	forward, right, forward2;
 	vec3_t	start;
 	int		damage = 200;
 	float	radius;
@@ -2246,9 +2349,20 @@ void weapon_sticky_launcher_fire(edict_t *ent)
 
 	// fuse length should be detonation time - time elapsed since first fire
 	// this way, all of them should explode at once
-	float fuse = STICKY_DETONATION - (level.time - stickyTimer);
+	// divide stickytime by 2 if upgraded
+	float fuse = STICKY_DETONATION / (weaponsUpgraded ? 2 : 1) - (level.time - stickyTimer);
 
-	fire_grenade(ent, start, forward, damage, 50, fuse, radius);		// decreased speed from 600 to 300
+	// if upgraded, drop an additional grenade and half the fuse
+	if (weaponsUpgraded) {
+		// drop second grenade slightly to the right to distinguish it from the first
+		for (int i = 0; i < 3; i++) {
+			forward2[i] = forward[i] + right[i] * 0.2;
+		}
+
+		fire_grenade(ent, start, forward2, damage, 50, fuse, radius);
+	}
+
+	fire_grenade(ent, start, forward, damage, 50, fuse, radius);	// very low speed so grenades are "dropped" instead of launched
 
 	gi.WriteByte(svc_muzzleflash);
 	gi.WriteShort(ent - g_edicts);

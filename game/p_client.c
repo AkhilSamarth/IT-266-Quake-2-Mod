@@ -1858,6 +1858,7 @@ void ClientBeginServerFrame (edict_t *ent)
 
 // stuff related to classes below
 
+// set the player's speed
 void setSpeed(int speed) {
 	char* speedStr;
 	itoa(speed, speedStr, 10);
@@ -1866,54 +1867,147 @@ void setSpeed(int speed) {
 	gi.cvar_set("cl_sidespeed", speedStr);
 }
 
+// clear the inventory
+void resetInventory(gclient_t* client) {
+	memset(&client->pers.inventory, 0, sizeof(client->pers.inventory));
+
+	client->pers.selected_item = NULL;
+	client->pers.weapon = NULL;
+}
+
+// give the player the given weapon
+void giveWeapon(edict_t* ent, char* pickupName) {
+	// copied from Cmd_Give_f and modified to fit here
+	gitem_t* it = FindItem(pickupName);
+	if (!it)
+	{
+		char* name = gi.argv(1);
+		it = FindItem(name);
+		if (!it)
+		{
+			gi.dprintf("unknown item %s supplied in giveWeapon()\n", pickupName);
+			return;
+		}
+	}
+
+	if (!it->pickup)
+	{
+		gi.dprintf("item %s supplied in giveWeapon() is not pickup-able\n", pickupName);
+		return;
+	}
+
+	int index = ITEM_INDEX(it);
+
+	if (it->flags & IT_AMMO)
+	{
+		if (gi.argc() == 3)
+			ent->client->pers.inventory[index] = atoi(gi.argv(2));
+		else
+			ent->client->pers.inventory[index] += it->quantity;
+	}
+	else
+	{
+		edict_t* it_ent = G_Spawn();
+		it_ent->classname = it->classname;
+		SpawnItem(it_ent, it);
+		Touch_Item(it_ent, ent, NULL, NULL);
+		if (it_ent->inuse)
+			G_FreeEdict(it_ent);
+	}
+
+	// select weapon
+	ent->client->pers.selected_item = ITEM_INDEX(it);
+	ent->client->pers.inventory[ent->client->pers.selected_item] = 1;
+
+	ent->client->pers.weapon = it;
+}
+
 // functions for switching to a given class
 void switchToScout(edict_t* ent) {
 	currentClass = SCOUT;
+
+	// inv management
+	resetInventory(ent->client);
 
 	setSpeed(SPEED_SCOUT);
 
 	// set hp
 	ent->max_health = HEALTH_SCOUT;
 	ent->health = HEALTH_SCOUT;
+
+	// give class weapons
+	giveWeapon(ent, "Panic Attack");
+	giveWeapon(ent, "Pistol");
+	giveWeapon(ent, "Scattergun");
 }
 
-void switchToSoldier(edict_t* ent) {
-	currentClass = SOLDIER;
-
-	setSpeed(SPEED_SOLDIER);
-
-	// set hp
-	ent->max_health = HEALTH_SOLDIER;
-	ent->health = HEALTH_SOLDIER;
-}
-
-void switchToSniper(edict_t* ent) {
-	currentClass = SNIPER;
-
-	setSpeed(SPEED_SNIPER);
-
-	// set hp
-	ent->max_health = HEALTH_SNIPER;
-	ent->health = HEALTH_SNIPER;
-}
-
-void switchToDemo(edict_t* ent) {
-	currentClass = DEMO;
-
-	setSpeed(SPEED_DEMO);
-
-	// set hp
-	ent->max_health = HEALTH_DEMO;
-	ent->health = HEALTH_DEMO;
-}
 
 void switchToHeavy(edict_t* ent) {
 	currentClass = HEAVY;
+
+	resetInventory(ent->client);
 
 	setSpeed(SPEED_HEAVY);
 
 	// set hp
 	ent->max_health = HEALTH_HEAVY;
 	ent->health = HEALTH_HEAVY;
+
+	// give class weapons
+	giveWeapon(ent, "Escape Plan");
+	giveWeapon(ent, "Shotgun");
+	giveWeapon(ent, "Minigun");
+}
+
+void switchToSoldier(edict_t* ent) {
+	currentClass = SOLDIER;
+
+	// inv management
+	resetInventory(ent->client);
+
+	setSpeed(SPEED_SOLDIER);
+
+	// set hp
+	ent->max_health = HEALTH_SOLDIER;
+	ent->health = HEALTH_SOLDIER;
+
+	// give class weapons
+	giveWeapon(ent, "Slow Death");
+	giveWeapon(ent, "Blaster");
+	giveWeapon(ent, "Rocket Launcher");
+}
+
+void switchToSniper(edict_t* ent) {
+	currentClass = SNIPER;
+
+	resetInventory(ent->client);
+
+	setSpeed(SPEED_SNIPER);
+
+	// set hp
+	ent->max_health = HEALTH_SNIPER;
+	ent->health = HEALTH_SNIPER;
+
+	// give class weapons
+	giveWeapon(ent, "Huntsman");
+	giveWeapon(ent, "SMG");
+	giveWeapon(ent, "Sniper Rifle");
+}
+
+void switchToDemo(edict_t* ent) {
+	currentClass = DEMO;
+
+	resetInventory(ent->client);
+
+	setSpeed(SPEED_DEMO);
+
+	// set hp
+	ent->max_health = HEALTH_DEMO;
+	ent->health = HEALTH_DEMO;
+
+	// give class weapons
+	giveWeapon(ent, "Sticky Launcher");
+	giveWeapon(ent, "Direct Hit");
+	giveWeapon(ent, "Grenade Launcher");
 }
 

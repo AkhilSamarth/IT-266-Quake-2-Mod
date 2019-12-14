@@ -904,7 +904,7 @@ void Cmd_PlayerList_f(edict_t *ent)
 void Cmd_SwitchClass_f(edict_t* ent) {
 	// make sure correct num of args has been supplied
 	if (gi.argc() != 2) {
-		gi.cprintf(ent, PRINT_HIGH, "Incorrect number (%d) of arguments supplied.\n", gi.argc());
+		gi.cprintf(ent, PRINT_HIGH, "Incorrect number (%i) of arguments supplied.\n", gi.argc());
 		return;
 	}
 
@@ -929,6 +929,25 @@ void Cmd_SwitchClass_f(edict_t* ent) {
 	else {
 		// invalid class name given
 		gi.cprintf(ent, PRINT_HIGH, "Invalid class name (\"%s\") given.\n", name);
+	}
+}
+
+// defined in p_weapons.c
+qboolean weaponsUpgraded;
+
+// command to upgrade/downgrade weapons
+void Cmd_ChangeUpgrade_f(edict_t* ent) {
+	if (gi.argc() > 1) {
+		gi.cprintf(ent, PRINT_HIGH, "Incorrect number (%i) of arguments supplied.\n", gi.argc());
+		return;
+	}
+
+	// check whether this is an upgrade or downgrade
+	if (Q_stricmp(gi.argv(0), "upgrade") == 0) {
+		weaponsUpgraded = true;
+	}
+	else {
+		weaponsUpgraded = false;
 	}
 }
 
@@ -1021,6 +1040,8 @@ void ClientCommand (edict_t *ent)
 		Cmd_PlayerList_f(ent);
 	else if (Q_stricmp(cmd, "class") == 0)
 		Cmd_SwitchClass_f(ent);
+	else if (Q_stricmp(cmd, "upgrade") == 0 || Q_stricmp(cmd, "downgrade") == 0)
+		Cmd_ChangeUpgrade_f(ent);
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);
 }
