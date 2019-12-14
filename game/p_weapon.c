@@ -1698,6 +1698,7 @@ void weapon_pistol_fire(edict_t *ent)
 	int			damage = 8;
 	int			kick = 2;
 	vec3_t		offset;
+	const int upgradeBulletCount = 3;		// how many bullets to fire in a single shot when upgraded
 
 	// if pistol has been fired, don't fire again until boolean is reset
 	if (pistolFired) {
@@ -1762,7 +1763,15 @@ void weapon_pistol_fire(edict_t *ent)
 	AngleVectors(angles, forward, right, NULL);
 	VectorSet(offset, 0, 8, ent->viewheight - 8);
 	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
-	fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+	
+	// double damage if upgraded
+	damage *= weaponsUpgraded ? 2 : 1;
+
+	// fire multiple times if upgraded
+	for (int i = 0; i < (weaponsUpgraded ? upgradeBulletCount : 1); i++) {
+		fire_bullet(ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+	}
+
 
 	gi.WriteByte(svc_muzzleflash);
 	gi.WriteShort(ent - g_edicts);
