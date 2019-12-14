@@ -36,8 +36,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define ESCAPE_DELAY 0.5	// time after dequipping escape plan to return speed to normal
 
-#define WIN_SCORE 3		// number of intels that need to submitted for a victory
-
 // enum to keep track of player's current class
 typedef enum class { NOT_SET, SCOUT, SOLDIER, SNIPER, DEMO, HEAVY } class_t;
 class_t currentClass = NOT_SET;
@@ -46,7 +44,9 @@ class_t currentClass = NOT_SET;
 qboolean intelNeeded = true;		// whether or not the game should spawn new intel
 qboolean carryingIntel = false;		// whether or not the player is currently holding intel
 qboolean dropoffNeeded = true;		// whether or not the intel dropoff needs to be spawned
+qboolean hasWon = false;			// whether or not the player has won
 int ctfScore = 0;		// how many intels have been submitted
+const int WIN_SCORE = 3;		// how many intels for victory
 void spawnItem(char* pickupName, float x, float y, float z);
 
 void ClientUserinfoChanged (edict_t *ent, char *userinfo);
@@ -1871,7 +1871,7 @@ void ClientBeginServerFrame (edict_t *ent)
 	}
 
 	// spawn intel if needed
-	if (intelNeeded) {
+	if (!hasWon && intelNeeded) {
 		spawnItem("Intel", 12.92, 65.04, 25);		// remember to add 10 to vertical coord (z) to prevent item from falling through floor
 		intelNeeded = false;
 	}
@@ -2066,5 +2066,17 @@ void spawnItem(char* pickupName, float x, float y, float z) {
 	VectorSet(dropped->s.origin, x, y, z);
 
 	gi.linkentity(dropped);
+}
+
+// called when the player has collected enough intels
+void victory() {
+	// prevent this from being called more than once
+	// needed because the pickup function for the dropoff will call whenever the player is touching
+	if (hasWon) {
+		return;
+	}
+
+	hasWon = true;
+	gi.dprintf("Winner!\n");
 }
 

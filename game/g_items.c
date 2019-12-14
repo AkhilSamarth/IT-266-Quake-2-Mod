@@ -50,9 +50,12 @@ void Weapon_DirectHit(edict_t* ent);
 void Weapon_StickyLauncher(edict_t* ent);
 
 // intel stuff
-qboolean carryingIntel;		// defined in p_client.c
-qboolean intelNeeded;		// defined in p_client.c
-int ctfScore;				// defined in p_client.c
+// everything except pickup/submit functions are defined in p_client.c
+qboolean carryingIntel;
+qboolean intelNeeded;
+int ctfScore;
+const int WIN_SCORE;
+void victory();
 qboolean Pickup_Intel(edict_t *ent, edict_t *other);
 qboolean Submit_Intel(edict_t *ent, edict_t *other);
 
@@ -2416,7 +2419,7 @@ tank commander's head
 qboolean Pickup_Intel(edict_t* ent, edict_t* other) {
 
 	// print coords of intel, helpful for positioning it
-	gi.dprintf("item coords: %f, %f, %f\n", ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
+	//gi.dprintf("item coords: %f, %f, %f\n", ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
 	
 	// give player the intel if they're not already holding it
 	if (carryingIntel) {
@@ -2435,6 +2438,10 @@ qboolean Submit_Intel(edict_t* ent, edict_t* other) {
 		carryingIntel = false;
 		intelNeeded = true;
 		ctfScore++;
+	}
+
+	if (ctfScore >= WIN_SCORE) {
+		victory();
 	}
 
 	// never pick up this item
