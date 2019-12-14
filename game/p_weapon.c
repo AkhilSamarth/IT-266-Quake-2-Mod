@@ -1225,6 +1225,7 @@ void weapon_shotgun_fire (edict_t *ent)
 	vec3_t		offset;
 	int			damage = 6;		// higher damage to match TF2
 	int			kick = 8;
+	const int upgradeBulletCount = 36;		// 3x as many bullets fired on upgrade
 
 	if (ent->client->ps.gunframe == 9)
 	{
@@ -1247,7 +1248,7 @@ void weapon_shotgun_fire (edict_t *ent)
 	}
 
 	// 3x higher spread than default shotgun
-	fire_shotgun (ent, start, forward, damage, kick, 1500, 1500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
+	fire_shotgun (ent, start, forward, damage, kick, 1500, 1500, weaponsUpgraded ? upgradeBulletCount : DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
