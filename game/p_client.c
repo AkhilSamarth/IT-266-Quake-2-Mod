@@ -45,7 +45,8 @@ class_t currentClass = NOT_SET;
 // intel/ctf stuff
 qboolean intelNeeded = true;		// whether or not the game should spawn new intel
 qboolean carryingIntel = false;		// whether or not the player is currently holding intel
-int score = 0;		// how many intels have been submitted
+qboolean dropoffNeeded = true;		// whether or not the intel dropoff needs to be spawned
+int ctfScore = 0;		// how many intels have been submitted
 void spawnItem(char* pickupName, float x, float y, float z);
 
 void ClientUserinfoChanged (edict_t *ent, char *userinfo);
@@ -1862,6 +1863,12 @@ void ClientBeginServerFrame (edict_t *ent)
 			PlayerTrail_Add (ent->s.old_origin);
 
 	client->latched_buttons = 0;
+
+	// spawn dropoff if needed
+	if (dropoffNeeded) {
+		spawnItem("Intel Dropoff", 188.52, -256.41, 25);
+		dropoffNeeded = false;
+	}
 
 	// spawn intel if needed
 	if (intelNeeded) {

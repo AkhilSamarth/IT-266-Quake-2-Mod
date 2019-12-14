@@ -51,7 +51,10 @@ void Weapon_StickyLauncher(edict_t* ent);
 
 // intel stuff
 qboolean carryingIntel;		// defined in p_client.c
+qboolean intelNeeded;		// defined in p_client.c
+int ctfScore;				// defined in p_client.c
 qboolean Pickup_Intel(edict_t *ent, edict_t *other);
+qboolean Submit_Intel(edict_t *ent, edict_t *other);
 
 gitem_armor_t jacketarmor_info	= { 25,  50, .30, .00, ARMOR_JACKET};
 gitem_armor_t combatarmor_info	= { 50, 100, .60, .30, ARMOR_COMBAT};
@@ -2382,6 +2385,27 @@ tank commander's head
 		/* precache */ ""
 	},
 
+	{	// intel drop off
+		"intel_dropoff",
+		Submit_Intel,
+		NULL,
+		NULL,
+		NULL,
+		"items/pkup.wav",
+		"models/items/keys/pyramid/tris.md2", EF_ROTATE,
+		NULL,
+		"k_pyramid",
+		"Intel Dropoff",
+		0,
+		0,
+		NULL,
+		0,
+		0,
+		NULL,
+		0,
+		/* precache */ ""
+	},
+
 	// =========== end of custom items for mod ===========
 
 	// end of list marker
@@ -2392,7 +2416,7 @@ tank commander's head
 qboolean Pickup_Intel(edict_t* ent, edict_t* other) {
 
 	// print coords of intel, helpful for positioning it
-	//gi.dprintf("item coords: %f, %f, %f\n", ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
+	gi.dprintf("item coords: %f, %f, %f\n", ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
 	
 	// give player the intel if they're not already holding it
 	if (carryingIntel) {
@@ -2402,6 +2426,19 @@ qboolean Pickup_Intel(edict_t* ent, edict_t* other) {
 		carryingIntel = true;
 		return true;
 	}
+}
+
+// intel submit function
+qboolean Submit_Intel(edict_t* ent, edict_t* other) {
+	// if the player is carrying intel, submit it and update flags
+	if (carryingIntel) {
+		carryingIntel = false;
+		intelNeeded = true;
+		ctfScore++;
+	}
+
+	// never pick up this item
+	return false;
 }
 
 /*QUAKED item_health (.3 .3 1) (-16 -16 -16) (16 16 16)
