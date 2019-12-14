@@ -1955,6 +1955,7 @@ void weapon_panicattack_fire(edict_t *ent)
 	vec3_t		offset;
 	int			damage = 6;		// higher damage to match TF2
 	int			kick = 8;
+	const float upgradeSpreadModifier = 2;		// modifier for spread when upgraded 
 
 	const int MAX_SPREAD = 5000;
 	const int MIN_SPREAD = 50;
@@ -1987,8 +1988,8 @@ void weapon_panicattack_fire(edict_t *ent)
 	// calculate spread based on health
 	// linear function with max hp = max spread and 0 hp = min spread
 	float slope = 1.0f * (MAX_SPREAD - MIN_SPREAD) / playerMaxHealth;
-	int spread = (int) (slope * playerHealth + MIN_SPREAD);
-	
+	int spread = (int) ((slope * playerHealth + MIN_SPREAD) / (weaponsUpgraded ? upgradeSpreadModifier : 1));
+
 	fire_shotgun(ent, start, forward, damage, kick, spread, spread, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
 
 	// send muzzle flash
