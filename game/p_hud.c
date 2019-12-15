@@ -154,6 +154,9 @@ void BeginIntermission (edict_t *targ)
 	}
 }
 
+// p_client.c
+qboolean showIntelPickupMsg;
+qboolean showIntelSubmitMsg;
 
 /*
 ==================
@@ -166,8 +169,6 @@ void DeathmatchScoreboardMessage (edict_t *ent)
 	char string[256];
 
 	sprintf(string, "xv 0 yv 0 picn blackbg");
-
-	gi.dprintf("fdasgfdfasd\n");
 
 	gi.WriteByte(svc_layout);
 	gi.WriteString(string);
