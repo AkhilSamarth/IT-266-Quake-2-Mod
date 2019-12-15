@@ -169,11 +169,11 @@ void DeathmatchScoreboardMessage (edict_t *ent)
 
 	if (showIntelSubmitMsg) {
 		// show submit message
-		string = "xv -100 yv -100 picn blackbg";
+		string = "xv -300 yv -300 picn flagsubmit";
 	}
 	else {
 		// show holding intel message
-		string = "xv -300 yv -300 picn blackbg";
+		string = "xv -300 yv -300 picn flag";
 	}
 
 	gi.WriteByte(svc_layout);
