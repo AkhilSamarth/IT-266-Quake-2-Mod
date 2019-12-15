@@ -156,6 +156,7 @@ void BeginIntermission (edict_t *targ)
 
 // p_client.c
 qboolean showIntelSubmitMsg;
+qboolean hasWon;
 
 /*
 ==================
@@ -167,7 +168,11 @@ void DeathmatchScoreboardMessage (edict_t *ent)
 {
 	char* string;
 
-	if (showIntelSubmitMsg) {
+	if (hasWon) {
+		// show victory message
+		string = "xv -30 yv -200 picn winner";
+	}
+	else if (showIntelSubmitMsg) {
 		// show submit message
 		string = "xv -300 yv -300 picn flagsubmit";
 	}

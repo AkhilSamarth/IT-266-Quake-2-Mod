@@ -1817,7 +1817,6 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 
 	// if intel has been submitted, show message and start timer
 	if (showIntelSubmitMsg && intelMsgTimer == 0) {
-		gi.dprintf("fassdfas\n");
 		ent->client->showscores = true;
 		DeathmatchScoreboard(ent);
 		intelMsgTimer = level.time;
@@ -1825,7 +1824,7 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 	}
 
 	// check intel timer
-	if (intelMsgTimer > 0 && (level.time - intelMsgTimer >= INTEL_MSG_TIME)) {
+	if (intelMsgTimer > 0 && (level.time - intelMsgTimer >= (hasWon ? INTEL_MSG_TIME * 2: INTEL_MSG_TIME))) {	// multiply timer by 2 for win msg
 		ent->client->showscores = false;
 		showIntelSubmitMsg = false;
 		intelMsgTimer = 0;
@@ -2115,8 +2114,6 @@ void victory() {
 	if (hasWon) {
 		return;
 	}
-
 	hasWon = true;
-	gi.dprintf("Winner!\n");
 }
 
