@@ -36,7 +36,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define ESCAPE_DELAY 0.5	// time after dequipping escape plan to return speed to normal
 
-#define INTEL_MSG_TIME 2	// how long to display intel pickup/submit messages
+#define INTEL_MSG_TIME 2	// how long to display intel submit message
 
 // enum to keep track of player's current class
 typedef enum class { NOT_SET, SCOUT, SOLDIER, SNIPER, DEMO, HEAVY } class_t;
@@ -52,7 +52,6 @@ const int WIN_SCORE = 3;		// how many intels for victory
 void spawnItem(char* pickupName, float x, float y, float z);
 
 // ui stuff
-qboolean showIntelPickupMsg = false;
 qboolean showIntelSubmitMsg = false;
 float intelMsgTimer = 0;
 
@@ -1809,18 +1808,27 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 	playerHealth = ent->health;
 	playerMaxHealth = ent->max_health;
 
-	// remove message after a set time
-	if (ent->client->showscores && (level.time - intelMsgTimer >= INTEL_MSG_TIME)) {
-		ent->client->showscores = false;
-		showIntelPickupMsg = false;
-		showIntelSubmitMsg = false;
+	// if intel is being carried, ui should be displayed
+	if (carryingIntel && !ent->client->showscores) {
+		ent->client->showscores = true;
+		DeathmatchScoreboard(ent);
+		return;
 	}
 
-	// check for ui stuff
-	if (!ent->client->showscores && (showIntelPickupMsg || showIntelSubmitMsg)) {
+	// if intel has been submitted, show message and start timer
+	if (showIntelSubmitMsg && intelMsgTimer == 0) {
+		gi.dprintf("fassdfas\n");
 		ent->client->showscores = true;
-		intelMsgTimer = level.time;
 		DeathmatchScoreboard(ent);
+		intelMsgTimer = level.time;
+		return;
+	}
+
+	// check intel timer
+	if (intelMsgTimer > 0 && (level.time - intelMsgTimer >= INTEL_MSG_TIME)) {
+		ent->client->showscores = false;
+		showIntelSubmitMsg = false;
+		intelMsgTimer = 0;
 	}
 }
 

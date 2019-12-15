@@ -2416,7 +2416,6 @@ tank commander's head
 };
 
 // p_client.c
-qboolean showIntelPickupMsg;
 qboolean showIntelSubmitMsg;
 
 // intel pickup function
@@ -2430,14 +2429,12 @@ qboolean Pickup_Intel(edict_t* ent, edict_t* other) {
 		return false;
 	}
 	
-	showIntelPickupMsg = true;
 	carryingIntel = true;
 	return true;
 }
 
-// intel submit function
+// if the player is carrying intel, submit it and update flags
 qboolean Submit_Intel(edict_t* ent, edict_t* other) {
-	// if the player is carrying intel, submit it and update flags
 	if (!carryingIntel) {
 		return false;
 	}

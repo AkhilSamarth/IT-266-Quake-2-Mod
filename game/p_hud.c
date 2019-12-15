@@ -155,7 +155,6 @@ void BeginIntermission (edict_t *targ)
 }
 
 // p_client.c
-qboolean showIntelPickupMsg;
 qboolean showIntelSubmitMsg;
 
 /*
@@ -166,9 +165,16 @@ DeathmatchScoreboardMessage
 */
 void DeathmatchScoreboardMessage (edict_t *ent)
 {
-	char string[256];
+	char* string;
 
-	sprintf(string, "xv 0 yv 0 picn blackbg");
+	if (showIntelSubmitMsg) {
+		// show submit message
+		string = "xv -100 yv -100 picn blackbg";
+	}
+	else {
+		// show holding intel message
+		string = "xv -300 yv -300 picn blackbg";
+	}
 
 	gi.WriteByte(svc_layout);
 	gi.WriteString(string);
