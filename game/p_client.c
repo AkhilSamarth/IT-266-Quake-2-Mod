@@ -2083,7 +2083,15 @@ void spawnItem(char* pickupName, float x, float y, float z) {
 	dropped->item = item;
 	dropped->spawnflags = DROPPED_ITEM;
 	dropped->s.effects = item->world_model_flags;
-	dropped->s.renderfx = RF_GLOW;
+	dropped->s.renderfx = 0;
+	// item-specific render fx
+	if (Q_stricmp(pickupName, "Intel") == 0) {
+		dropped->s.renderfx |= RF_SHELL_BLUE;
+	}
+	else if (Q_stricmp(pickupName, "Pyramid Key")) {
+		dropped->s.renderfx |= RF_SHELL_GREEN;
+	}
+
 	VectorSet(dropped->mins, -15, -15, -15);
 	VectorSet(dropped->maxs, 15, 15, 15);
 	gi.setmodel(dropped, dropped->item->world_model);
