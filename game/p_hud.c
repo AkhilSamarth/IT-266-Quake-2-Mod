@@ -232,20 +232,8 @@ Draw help computer.
 // modified to draw instructions for class switching
 void HelpComputer (edict_t *ent)
 {
-	char	string[1024];
-
-	// send the layout
-	Com_sprintf(string, sizeof(string),
-		"xv -140 yv -80 picn blackbg "
-		"xv 0 yv 40 cstring2 \"Welcome to Quake Fortress 2!\""
-		"xv 0 yv 80 cstring2 \"Press 1 to switch to Scout.\""
-		"xv 0 yv 100 cstring2 \"Press 2 to switch to Heavy.\""
-		"xv 0 yv 120 cstring2 \"Press 3 to switch to Soldier.\""
-		"xv 0 yv 140 cstring2 \"Press 4 to switch to Sniper.\""
-		"xv 0 yv 160 cstring2 \"Press 5 to switch to Demo.\"");
-
 	gi.WriteByte (svc_layout);
-	gi.WriteString (string);
+	gi.WriteString("xv -140 yv -80 picn helpmenu");
 	gi.unicast (ent, true);
 }
 
