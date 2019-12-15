@@ -49,6 +49,13 @@ int ctfScore = 0;		// how many intels have been submitted
 const int WIN_SCORE = 3;		// how many intels for victory
 void spawnItem(char* pickupName, float x, float y, float z);
 
+// ui stuff
+qboolean showIntelPickupMsg = false;
+qboolean showIntelSubmitMsg = false;
+
+// p_hud.c
+void DeathmatchScoreboard(edict_t *ent);
+
 void ClientUserinfoChanged (edict_t *ent, char *userinfo);
 
 void SP_misc_teleporter_dest (edict_t *ent);
@@ -1798,6 +1805,12 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 	// upgdate global health var
 	playerHealth = ent->health;
 	playerMaxHealth = ent->max_health;
+
+	// check for ui stuff
+	if (showIntelPickupMsg) {
+		ent->client->showscores = true;
+		DeathmatchScoreboard(ent);
+	}
 }
 
 /*

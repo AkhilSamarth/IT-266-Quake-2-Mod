@@ -2415,6 +2415,10 @@ tank commander's head
 	{NULL}
 };
 
+// p_client.c
+qboolean showIntelPickupMsg;
+qboolean showIntelSubmitMsg;
+
 // intel pickup function
 qboolean Pickup_Intel(edict_t* ent, edict_t* other) {
 
@@ -2425,20 +2429,24 @@ qboolean Pickup_Intel(edict_t* ent, edict_t* other) {
 	if (carryingIntel) {
 		return false;
 	}
-	else {
-		carryingIntel = true;
-		return true;
-	}
+	
+	showIntelPickupMsg = true;
+	carryingIntel = true;
+	return true;
 }
 
 // intel submit function
 qboolean Submit_Intel(edict_t* ent, edict_t* other) {
 	// if the player is carrying intel, submit it and update flags
-	if (carryingIntel) {
-		carryingIntel = false;
-		intelNeeded = true;
-		ctfScore++;
+	if (!carryingIntel) {
+		return false;
 	}
+
+	showIntelSubmitMsg = true;
+
+	carryingIntel = false;
+	intelNeeded = true;
+	ctfScore++;
 
 	if (ctfScore >= WIN_SCORE) {
 		victory();
