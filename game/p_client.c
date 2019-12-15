@@ -1919,12 +1919,39 @@ void setSpeed(int speed) {
 	gi.cvar_set("cl_sidespeed", speedStr);
 }
 
-// clear the inventory
-void resetInventory(gclient_t* client) {
-	memset(&client->pers.inventory, 0, sizeof(client->pers.inventory));
+// remove the given weapon
+void removeWeapon(edict_t* ent, char* pickupName) {
+	// find item and index
+	gitem_t* item = FindItem(pickupName);
+	if (!item) {
+		gi.cprintf(ent, PRINT_HIGH, "Invalid item name \"%s\" supplied in removeWeapon().\n", pickupName);
+		return;
+	}
+	int index = ITEM_INDEX(item);
 
-	client->pers.selected_item = NULL;
-	client->pers.weapon = NULL;
+	// remove from inventory
+	ent->client->pers.inventory[index] = 0;
+}
+
+// removes all but the given weapons
+void removeWeaponsExcept(edict_t* ent, char* weap1, char* weap2, char* weap3) {
+	int		i;
+	gitem_t	*it;
+
+	// loop through itemlist and check it it's a weapon
+	it = itemlist;
+	for (i = 0; i<game.num_items; i++, it++) {
+		if (!it->pickup_name || !(it->flags & IT_WEAPON))
+			continue;
+
+		// if this item is one of the given weapons, keep going
+		if (Q_stricmp(it->pickup_name, weap1) == 0 || Q_stricmp(it->pickup_name, weap2) == 0 || Q_stricmp(it->pickup_name, weap3) == 0) {
+			continue;
+		}
+
+		// remove the item from the player's inventory
+		ent->client->pers.inventory[i] = 0;
+	}
 }
 
 // give the player the given weapon
@@ -1974,12 +2001,21 @@ void giveWeapon(edict_t* ent, char* pickupName) {
 	ent->client->pers.weapon = it;
 }
 
+// give the player the given weapons and get rid of everything else
+void switchWeapons(edict_t* ent, char* weap1, char* weap2, char* weap3) {
+	
+	// give weapons
+	giveWeapon(ent, weap1);
+	giveWeapon(ent, weap2);
+	giveWeapon(ent, weap3);
+
+	// remove others
+	removeWeaponsExcept(ent, weap1, weap2, weap3);
+}
+
 // functions for switching to a given class
 void switchToScout(edict_t* ent) {
 	currentClass = SCOUT;
-
-	// inv management
-	resetInventory(ent->client);
 
 	setSpeed(SPEED_SCOUT);
 
@@ -1988,16 +2024,12 @@ void switchToScout(edict_t* ent) {
 	ent->health = HEALTH_SCOUT;
 
 	// give class weapons
-	giveWeapon(ent, "Panic Attack");
-	giveWeapon(ent, "Pistol");
-	giveWeapon(ent, "Scattergun");
+	switchWeapons(ent, "Panic Attack", "Pistol", "Scattergun");
 }
 
 
 void switchToHeavy(edict_t* ent) {
 	currentClass = HEAVY;
-
-	resetInventory(ent->client);
 
 	setSpeed(SPEED_HEAVY);
 
@@ -2006,16 +2038,11 @@ void switchToHeavy(edict_t* ent) {
 	ent->health = HEALTH_HEAVY;
 
 	// give class weapons
-	giveWeapon(ent, "Escape Plan");
-	giveWeapon(ent, "Shotgun");
-	giveWeapon(ent, "Minigun");
+	switchWeapons(ent, "Escape Plan", "Shotgun", "Minigun");
 }
 
 void switchToSoldier(edict_t* ent) {
 	currentClass = SOLDIER;
-
-	// inv management
-	resetInventory(ent->client);
 
 	setSpeed(SPEED_SOLDIER);
 
@@ -2024,15 +2051,11 @@ void switchToSoldier(edict_t* ent) {
 	ent->health = HEALTH_SOLDIER;
 
 	// give class weapons
-	giveWeapon(ent, "Slow Death");
-	giveWeapon(ent, "Blaster");
-	giveWeapon(ent, "Rocket Launcher");
+	switchWeapons(ent, "Slow Death", "Blaster", "Rocket Launcher");
 }
 
 void switchToSniper(edict_t* ent) {
 	currentClass = SNIPER;
-
-	resetInventory(ent->client);
 
 	setSpeed(SPEED_SNIPER);
 
@@ -2041,15 +2064,11 @@ void switchToSniper(edict_t* ent) {
 	ent->health = HEALTH_SNIPER;
 
 	// give class weapons
-	giveWeapon(ent, "Huntsman");
-	giveWeapon(ent, "SMG");
-	giveWeapon(ent, "Sniper Rifle");
+	switchWeapons(ent, "Huntsman", "SMG", "Sniper Rifle");
 }
 
 void switchToDemo(edict_t* ent) {
 	currentClass = DEMO;
-
-	resetInventory(ent->client);
 
 	setSpeed(SPEED_DEMO);
 
@@ -2058,9 +2077,7 @@ void switchToDemo(edict_t* ent) {
 	ent->health = HEALTH_DEMO;
 
 	// give class weapons
-	giveWeapon(ent, "Sticky Launcher");
-	giveWeapon(ent, "Direct Hit");
-	giveWeapon(ent, "Grenade Launcher");
+	switchWeapons(ent, "Sticky Launcher", "Direct Hit", "Grenade Launcher");
 }
 
 // defined in g_items.c
