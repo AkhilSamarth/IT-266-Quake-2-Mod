@@ -1919,7 +1919,7 @@ void setSpeed(int speed) {
 	gi.cvar_set("cl_sidespeed", speedStr);
 }
 
-// remove the given weapon
+// remove the given weapon from the player's inventory
 void removeWeapon(edict_t* ent, char* pickupName) {
 	// find item and index
 	gitem_t* item = FindItem(pickupName);
@@ -1950,7 +1950,7 @@ void removeWeaponsExcept(edict_t* ent, char* weap1, char* weap2, char* weap3) {
 		}
 
 		// remove the item from the player's inventory
-		ent->client->pers.inventory[i] = 0;
+		removeWeapon(ent, it->pickup_name);
 	}
 }
 
@@ -1983,6 +1983,8 @@ void giveWeapon(edict_t* ent, char* pickupName) {
 			ent->client->pers.inventory[index] = atoi(gi.argv(2));
 		else
 			ent->client->pers.inventory[index] += it->quantity;
+
+		return;
 	}
 	else
 	{
@@ -1995,10 +1997,7 @@ void giveWeapon(edict_t* ent, char* pickupName) {
 	}
 
 	// select weapon
-	ent->client->pers.selected_item = ITEM_INDEX(it);
-	ent->client->pers.inventory[ent->client->pers.selected_item] = 1;
-
-	ent->client->pers.weapon = it;
+	it->use(ent, it);
 }
 
 // give the player the given weapons and get rid of everything else
