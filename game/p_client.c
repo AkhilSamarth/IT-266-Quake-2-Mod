@@ -2063,6 +2063,8 @@ void switchToSniper(edict_t* ent) {
 }
 
 void switchToDemo(edict_t* ent) {
+	int grenadeIndex;
+
 	currentClass = DEMO;
 
 	setSpeed(SPEED_DEMO);
@@ -2073,6 +2075,10 @@ void switchToDemo(edict_t* ent) {
 
 	// give class weapons
 	switchWeapons(ent, "Sticky Launcher", "Direct Hit", "Grenade Launcher");
+
+	// give grenades
+	grenadeIndex = ITEM_INDEX(FindItem("grenades"));
+	ent->client->pers.inventory[grenadeIndex] = 50;
 }
 
 // defined in g_items.c
