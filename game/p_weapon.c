@@ -2366,15 +2366,15 @@ void weapon_sticky_launcher_fire(edict_t *ent)
 
 void Weapon_StickyLauncher(edict_t *ent)
 {
-	static int	pause_frames[] = { 34, 51, 59, 0 };
-	static int	fire_frames[] = { 6, 0 };
+	static int	pause_frames[] = { 0 };
+	static int	fire_frames[] = { 6, 0};
 
 	// if sticky timer has exceeded sticky detonation time, reset it to 0
 	if ((level.time - stickyTimer) >= STICKY_DETONATION) {
 		stickyTimer = 0;
 	}
 
-	Weapon_Generic(ent, 5, 16, 59, 64, pause_frames, fire_frames, weapon_sticky_launcher_fire);
+	Weapon_Generic(ent, 5, 20, 49, 53, pause_frames, fire_frames, weapon_sticky_launcher_fire);
 }
 
 void Bison_Fire(edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, int effect)
