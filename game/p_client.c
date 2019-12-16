@@ -1789,13 +1789,9 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 			UpdateChaseCam(other);
 	}
 
-	// if mouse button isn't being pressed, reset minigun timer
+	// if mouse button isn't being pressed, reset minigun timer and pistolFired
 	if (!(ent->client->buttons & BUTTON_ATTACK)) {
 		minigunTimer = level.time;
-	}
-
-	// if mouse button isn't being pressed, reset pistolFired
-	if (!(ent->client->buttons & BUTTON_ATTACK)) {
 		pistolFired = false;
 	}
 
