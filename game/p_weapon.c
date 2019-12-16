@@ -1692,7 +1692,7 @@ void weapon_pistol_fire(edict_t *ent)
 	int			kick = 2;
 	vec3_t		offset;
 	const int upgradeBulletCount = 3;		// how many bullets to fire in a single shot when upgraded
-
+	
 	// if pistol has been fired, don't fire again until boolean is reset
 	if (pistolFired) {
 		return;
@@ -1704,7 +1704,7 @@ void weapon_pistol_fire(edict_t *ent)
 	if (!(ent->client->buttons & BUTTON_ATTACK))
 	{
 		ent->client->machinegun_shots = 0;
-		//ent->client->ps.gunframe++;	don't want kickback when firing stops
+		ent->client->ps.gunframe++;
 		return;
 	}
 	
