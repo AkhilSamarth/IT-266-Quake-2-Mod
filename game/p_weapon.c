@@ -2244,10 +2244,10 @@ void weapon_huntsman_fire(edict_t *ent)
 
 void Weapon_Huntsman(edict_t *ent)
 {
-	static int	pause_frames[] = { 56, 0 };
-	static int	fire_frames[] = { 4, 0 };
+	static int	pause_frames[] = { 0 };
+	static int	fire_frames[] = { 6, 0 };
 
-	Weapon_Generic(ent, 3, 18, 56, 61, pause_frames, fire_frames, weapon_huntsman_fire);
+	Weapon_Generic(ent, 5, 20, 49, 53, pause_frames, fire_frames, weapon_huntsman_fire);
 }
 
 void weapon_directhit_fire(edict_t *ent)
@@ -2304,10 +2304,10 @@ void weapon_directhit_fire(edict_t *ent)
 
 void Weapon_DirectHit(edict_t *ent)
 {
-	static int	pause_frames[] = { 34, 51, 59, 0 };
-	static int	fire_frames[] = { 6, 0 };
+	static int	pause_frames[] = { 56, 0 };
+	static int	fire_frames[] = { 4, 0 };
 
-	Weapon_Generic(ent, 5, 16, 59, 64, pause_frames, fire_frames, weapon_directhit_fire);
+	Weapon_Generic(ent, 3, 18, 56, 61, pause_frames, fire_frames, weapon_directhit_fire);
 }
 
 void weapon_sticky_launcher_fire(edict_t *ent)
