@@ -951,6 +951,27 @@ void Cmd_ChangeUpgrade_f(edict_t* ent) {
 	}
 }
 
+// defined in g_items.c
+edict_t* Drop_Item(edict_t* ent, gitem_t* item);
+
+// command to spawn intel
+void Cmd_Spawn_f(edict_t* ent) {
+	if (gi.argc() < 2) {
+		gi.cprintf(ent, PRINT_HIGH, "Item name not supplied.\n");
+		return;
+	}
+
+	// try to find item
+	gitem_t* item = FindItem(gi.args());
+
+	if (!item) {
+		gi.cprintf(ent, PRINT_HIGH, "Invalid item name \"%s\" supplied.\n", gi.args(1));
+		return;
+	}
+
+	Drop_Item(ent, item);
+}
+
 /*
 =================
 ClientCommand
@@ -1042,6 +1063,8 @@ void ClientCommand (edict_t *ent)
 		Cmd_SwitchClass_f(ent);
 	else if (Q_stricmp(cmd, "upgrade") == 0 || Q_stricmp(cmd, "downgrade") == 0)
 		Cmd_ChangeUpgrade_f(ent);
+	else if (Q_stricmp(cmd, "spawn") == 0)
+		Cmd_Spawn_f(ent);
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);
 }

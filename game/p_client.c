@@ -20,13 +20,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 #include "m_player.h"
 
-// avoid magic nums
+// class speed
 #define SPEED_SCOUT 400
 #define SPEED_SOLDIER 150
 #define SPEED_SNIPER 200
 #define SPEED_DEMO 180
 #define SPEED_HEAVY 100
 
+// class max health
 #define HEALTH_SCOUT 125
 #define HEALTH_SOLDIER 200
 #define HEALTH_SNIPER 175
@@ -35,9 +36,27 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define ESCAPE_DELAY 0.5	// time after dequipping escape plan to return speed to normal
 
+#define INTEL_MSG_TIME 2	// how long to display intel submit message
+
 // enum to keep track of player's current class
 typedef enum class { NOT_SET, SCOUT, SOLDIER, SNIPER, DEMO, HEAVY } class_t;
 class_t currentClass = NOT_SET;
+
+// intel/ctf stuff
+qboolean intelNeeded = true;		// whether or not the game should spawn new intel
+qboolean carryingIntel = false;		// whether or not the player is currently holding intel
+qboolean dropoffNeeded = true;		// whether or not the intel dropoff needs to be spawned
+qboolean hasWon = false;			// whether or not the player has won
+int ctfScore = 0;		// how many intels have been submitted
+const int WIN_SCORE = 3;		// how many intels for victory
+void spawnItem(char* pickupName, float x, float y, float z);
+
+// ui stuff
+qboolean showIntelSubmitMsg = false;
+float intelMsgTimer = 0;
+
+// p_hud.c
+void DeathmatchScoreboard(edict_t *ent);
 
 void ClientUserinfoChanged (edict_t *ent, char *userinfo);
 
@@ -1788,8 +1807,29 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 	// upgdate global health var
 	playerHealth = ent->health;
 	playerMaxHealth = ent->max_health;
-}
 
+	// if intel is being carried, ui should be displayed
+	if (carryingIntel && !ent->client->showscores) {
+		ent->client->showscores = true;
+		DeathmatchScoreboard(ent);
+		return;
+	}
+
+	// if intel has been submitted, show message and start timer
+	if (showIntelSubmitMsg && intelMsgTimer == 0) {
+		ent->client->showscores = true;
+		DeathmatchScoreboard(ent);
+		intelMsgTimer = level.time;
+		return;
+	}
+
+	// check intel timer
+	if (intelMsgTimer > 0 && (level.time - intelMsgTimer >= (hasWon ? INTEL_MSG_TIME * 2: INTEL_MSG_TIME))) {	// multiply timer by 2 for win msg
+		ent->client->showscores = false;
+		showIntelSubmitMsg = false;
+		intelMsgTimer = 0;
+	}
+}
 
 /*
 ==============
@@ -1854,6 +1894,18 @@ void ClientBeginServerFrame (edict_t *ent)
 			PlayerTrail_Add (ent->s.old_origin);
 
 	client->latched_buttons = 0;
+
+	// spawn dropoff if needed
+	if (dropoffNeeded) {
+		spawnItem("Intel Dropoff", 188.52, -256.41, 25);
+		dropoffNeeded = false;
+	}
+
+	// spawn intel if needed
+	if (!hasWon && intelNeeded) {
+		spawnItem("Intel", 12.92, 65.04, 25);		// remember to add 10 to vertical coord (z) to prevent item from falling through floor
+		intelNeeded = false;
+	}
 }
 
 // stuff related to classes below
@@ -1867,12 +1919,39 @@ void setSpeed(int speed) {
 	gi.cvar_set("cl_sidespeed", speedStr);
 }
 
-// clear the inventory
-void resetInventory(gclient_t* client) {
-	memset(&client->pers.inventory, 0, sizeof(client->pers.inventory));
+// remove the given weapon from the player's inventory
+void removeWeapon(edict_t* ent, char* pickupName) {
+	// find item and index
+	gitem_t* item = FindItem(pickupName);
+	if (!item) {
+		gi.cprintf(ent, PRINT_HIGH, "Invalid item name \"%s\" supplied in removeWeapon().\n", pickupName);
+		return;
+	}
+	int index = ITEM_INDEX(item);
 
-	client->pers.selected_item = NULL;
-	client->pers.weapon = NULL;
+	// remove from inventory
+	ent->client->pers.inventory[index] = 0;
+}
+
+// removes all but the given weapons
+void removeWeaponsExcept(edict_t* ent, char* weap1, char* weap2, char* weap3) {
+	int		i;
+	gitem_t	*it;
+
+	// loop through itemlist and check it it's a weapon
+	it = itemlist;
+	for (i = 0; i<game.num_items; i++, it++) {
+		if (!it->pickup_name || !(it->flags & IT_WEAPON))
+			continue;
+
+		// if this item is one of the given weapons, keep going
+		if (Q_stricmp(it->pickup_name, weap1) == 0 || Q_stricmp(it->pickup_name, weap2) == 0 || Q_stricmp(it->pickup_name, weap3) == 0) {
+			continue;
+		}
+
+		// remove the item from the player's inventory
+		removeWeapon(ent, it->pickup_name);
+	}
 }
 
 // give the player the given weapon
@@ -1904,6 +1983,8 @@ void giveWeapon(edict_t* ent, char* pickupName) {
 			ent->client->pers.inventory[index] = atoi(gi.argv(2));
 		else
 			ent->client->pers.inventory[index] += it->quantity;
+
+		return;
 	}
 	else
 	{
@@ -1916,18 +1997,24 @@ void giveWeapon(edict_t* ent, char* pickupName) {
 	}
 
 	// select weapon
-	ent->client->pers.selected_item = ITEM_INDEX(it);
-	ent->client->pers.inventory[ent->client->pers.selected_item] = 1;
+	it->use(ent, it);
+}
 
-	ent->client->pers.weapon = it;
+// give the player the given weapons and get rid of everything else
+void switchWeapons(edict_t* ent, char* weap1, char* weap2, char* weap3) {
+	
+	// give weapons
+	giveWeapon(ent, weap1);
+	giveWeapon(ent, weap2);
+	giveWeapon(ent, weap3);
+
+	// remove others
+	removeWeaponsExcept(ent, weap1, weap2, weap3);
 }
 
 // functions for switching to a given class
 void switchToScout(edict_t* ent) {
 	currentClass = SCOUT;
-
-	// inv management
-	resetInventory(ent->client);
 
 	setSpeed(SPEED_SCOUT);
 
@@ -1936,16 +2023,12 @@ void switchToScout(edict_t* ent) {
 	ent->health = HEALTH_SCOUT;
 
 	// give class weapons
-	giveWeapon(ent, "Panic Attack");
-	giveWeapon(ent, "Pistol");
-	giveWeapon(ent, "Scattergun");
+	switchWeapons(ent, "Panic Attack", "Pistol", "Scattergun");
 }
 
 
 void switchToHeavy(edict_t* ent) {
 	currentClass = HEAVY;
-
-	resetInventory(ent->client);
 
 	setSpeed(SPEED_HEAVY);
 
@@ -1954,16 +2037,11 @@ void switchToHeavy(edict_t* ent) {
 	ent->health = HEALTH_HEAVY;
 
 	// give class weapons
-	giveWeapon(ent, "Escape Plan");
-	giveWeapon(ent, "Shotgun");
-	giveWeapon(ent, "Minigun");
+	switchWeapons(ent, "Escape Plan", "Shotgun", "Minigun");
 }
 
 void switchToSoldier(edict_t* ent) {
 	currentClass = SOLDIER;
-
-	// inv management
-	resetInventory(ent->client);
 
 	setSpeed(SPEED_SOLDIER);
 
@@ -1972,15 +2050,11 @@ void switchToSoldier(edict_t* ent) {
 	ent->health = HEALTH_SOLDIER;
 
 	// give class weapons
-	giveWeapon(ent, "Slow Death");
-	giveWeapon(ent, "Blaster");
-	giveWeapon(ent, "Rocket Launcher");
+	switchWeapons(ent, "Slow Death", "Blaster", "Rocket Launcher");
 }
 
 void switchToSniper(edict_t* ent) {
 	currentClass = SNIPER;
-
-	resetInventory(ent->client);
 
 	setSpeed(SPEED_SNIPER);
 
@@ -1989,15 +2063,11 @@ void switchToSniper(edict_t* ent) {
 	ent->health = HEALTH_SNIPER;
 
 	// give class weapons
-	giveWeapon(ent, "Huntsman");
-	giveWeapon(ent, "SMG");
-	giveWeapon(ent, "Sniper Rifle");
+	switchWeapons(ent, "Huntsman", "SMG", "Sniper Rifle");
 }
 
 void switchToDemo(edict_t* ent) {
 	currentClass = DEMO;
-
-	resetInventory(ent->client);
 
 	setSpeed(SPEED_DEMO);
 
@@ -2006,8 +2076,60 @@ void switchToDemo(edict_t* ent) {
 	ent->health = HEALTH_DEMO;
 
 	// give class weapons
-	giveWeapon(ent, "Sticky Launcher");
-	giveWeapon(ent, "Direct Hit");
-	giveWeapon(ent, "Grenade Launcher");
+	switchWeapons(ent, "Sticky Launcher", "Direct Hit", "Grenade Launcher");
+}
+
+// defined in g_items.c
+void drop_temp_touch(edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf);
+void drop_make_touchable(edict_t *ent);
+
+// spawn item at a given coordinate, copied from Drop_Item and modified
+void spawnItem(char* pickupName, float x, float y, float z) {
+	edict_t	*dropped;
+	vec3_t	forward, right;
+	vec3_t	offset;
+	gitem_t* item;
+
+	item = FindItem(pickupName);
+
+	dropped = G_Spawn();
+
+	dropped->classname = item->classname;
+	dropped->item = item;
+	dropped->spawnflags = DROPPED_ITEM;
+	dropped->s.effects = item->world_model_flags;
+	dropped->s.renderfx = 0;
+	// item-specific render fx
+	if (Q_stricmp(pickupName, "Intel") == 0) {
+		dropped->s.renderfx |= RF_SHELL_BLUE;
+	}
+	else if (Q_stricmp(pickupName, "Pyramid Key")) {
+		dropped->s.renderfx |= RF_SHELL_GREEN;
+	}
+
+	VectorSet(dropped->mins, -15, -15, -15);
+	VectorSet(dropped->maxs, 15, 15, 15);
+	gi.setmodel(dropped, dropped->item->world_model);
+	dropped->solid = SOLID_TRIGGER;
+	dropped->movetype = MOVETYPE_TOSS;
+	dropped->touch = drop_temp_touch;
+
+	dropped->think = drop_make_touchable;
+	dropped->nextthink = level.time + 1;
+
+	// set position of intel
+	VectorSet(dropped->s.origin, x, y, z);
+
+	gi.linkentity(dropped);
+}
+
+// called when the player has collected enough intels
+void victory() {
+	// prevent this from being called more than once
+	// needed because the pickup function for the dropoff will call whenever the player is touching
+	if (hasWon) {
+		return;
+	}
+	hasWon = true;
 }
 

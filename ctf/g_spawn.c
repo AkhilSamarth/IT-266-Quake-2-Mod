@@ -144,6 +144,9 @@ void SP_turret_breach (edict_t *self);
 void SP_turret_base (edict_t *self);
 void SP_turret_driver (edict_t *self);
 
+// intel spawn
+void SP_intel(edict_t* self);
+
 
 spawn_t	spawns[] = {
 	{"item_health", SP_item_health},

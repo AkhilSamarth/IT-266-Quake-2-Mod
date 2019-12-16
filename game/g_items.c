@@ -49,6 +49,16 @@ void Weapon_Huntsman(edict_t* ent);
 void Weapon_DirectHit(edict_t* ent);
 void Weapon_StickyLauncher(edict_t* ent);
 
+// intel stuff
+// everything except pickup/submit functions are defined in p_client.c
+qboolean carryingIntel;
+qboolean intelNeeded;
+int ctfScore;
+const int WIN_SCORE;
+void victory();
+qboolean Pickup_Intel(edict_t *ent, edict_t *other);
+qboolean Submit_Intel(edict_t *ent, edict_t *other);
+
 gitem_armor_t jacketarmor_info	= { 25,  50, .30, .00, ARMOR_JACKET};
 gitem_armor_t combatarmor_info	= { 50, 100, .60, .30, ARMOR_COMBAT};
 gitem_armor_t bodyarmor_info	= {100, 200, .80, .60, ARMOR_BODY};
@@ -835,7 +845,7 @@ void Touch_Item (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf
 
 //======================================================================
 
-static void drop_temp_touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf)
+void drop_temp_touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf)
 {
 	if (other == ent->owner)
 		return;
@@ -843,7 +853,7 @@ static void drop_temp_touch (edict_t *ent, edict_t *other, cplane_t *plane, csur
 	Touch_Item (ent, other, plane, surf);
 }
 
-static void drop_make_touchable (edict_t *ent)
+void drop_make_touchable (edict_t *ent)
 {
 	ent->touch = Touch_Item;
 	if (deathmatch->value)
@@ -2315,7 +2325,7 @@ tank commander's head
 		/* precache */ "weapons/rg_hum.wav"
 	},
 
-	{
+	{	// demo weapon
 		"weapon_directhit",
 		Pickup_Weapon,
 		Use_Weapon,
@@ -2336,7 +2346,7 @@ tank commander's head
 		/* precache */ "models/objects/grenade/tris.md2 weapons/grenlf1a.wav weapons/grenlr1b.wav weapons/grenlb1b.wav"
 	},
 
-	{
+	{	// demo weapon
 		"weapon_stickylauncher",
 		Pickup_Weapon,
 		Use_Weapon,
@@ -2357,12 +2367,103 @@ tank commander's head
 		/* precache */ "models/objects/grenade/tris.md2 weapons/grenlf1a.wav weapons/grenlr1b.wav weapons/grenlb1b.wav"
 	},
 
+	{	// intel
+		"intelligence",
+		Pickup_Intel,
+		NULL,
+		NULL,
+		NULL,
+		"items/pkup.wav",
+		"models/items/pack/tris.md2", EF_ROTATE,
+		NULL,
+		/* icon */		"i_pack",
+		/* pickup */	"Intel",
+		/* width */		2,
+		180,
+		NULL,
+		0,
+		0,
+		NULL,
+		0,
+		/* precache */ ""
+	},
+
+	{	// intel drop off
+		"intel_dropoff",
+		Submit_Intel,
+		NULL,
+		NULL,
+		NULL,
+		"items/pkup.wav",
+		"models/items/keys/pyramid/tris.md2", EF_ROTATE,
+		NULL,
+		"k_pyramid",
+		"Intel Dropoff",
+		0,
+		0,
+		NULL,
+		0,
+		0,
+		NULL,
+		0,
+		/* precache */ ""
+	},
+
 	// =========== end of custom items for mod ===========
 
 	// end of list marker
 	{NULL}
 };
 
+// p_client.c
+qboolean showIntelSubmitMsg;
+
+// intel pickup function
+qboolean Pickup_Intel(edict_t* ent, edict_t* other) {
+
+	// print coords of intel, helpful for positioning it
+	//gi.dprintf("item coords: %f, %f, %f\n", ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
+	
+	// give player the intel if they're not already holding it
+	if (carryingIntel) {
+		return false;
+	}
+
+	// special particle effect on intel pickup
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_ROCKET_EXPLOSION_WATER);
+	gi.WritePosition(ent->s.origin);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+	
+	carryingIntel = true;
+	return true;
+}
+
+// if the player is carrying intel, submit it and update flags
+qboolean Submit_Intel(edict_t* ent, edict_t* other) {
+	if (!carryingIntel) {
+		return false;
+	}
+
+	showIntelSubmitMsg = true;
+
+	// special particle effect on intel submit
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_BFG_BIGEXPLOSION);
+	gi.WritePosition(ent->s.origin);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	carryingIntel = false;
+	intelNeeded = true;
+	ctfScore++;
+
+	if (ctfScore >= WIN_SCORE) {
+		victory();
+	}
+
+	// never pick up this item
+	return false;
+}
 
 /*QUAKED item_health (.3 .3 1) (-16 -16 -16) (16 16 16)
 */
