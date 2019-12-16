@@ -1313,24 +1313,24 @@ gitem_t	itemlist[] =
 always owned, never in the world
 */
 	{
-		"weapon_blaster", 
-		Pickup_Weapon,
+		"weapon_blaster",
+		NULL,
 		Use_Weapon,
-		Drop_Weapon,
+		NULL,
 		Weapon_Blaster,
 		"misc/w_pkup.wav",
 		NULL, 0,
 		"models/weapons/v_blast/tris.md2",
-/* icon */		"w_blaster",
-/* pickup */	"Blaster",
+		/* icon */		"w_blaster",
+		/* pickup */	"Blaster",
 		0,
 		0,
-		"Cells",
-		IT_WEAPON|IT_STAY_COOP,
+		NULL,
+		IT_WEAPON | IT_STAY_COOP,
 		WEAP_BLASTER,
 		NULL,
 		0,
-/* precache */ "weapons/blastf1a.wav misc/lasfly.wav"
+		/* precache */ "weapons/blastf1a.wav misc/lasfly.wav"
 	},
 
 /*QUAKED weapon_shotgun (.3 .3 1) (-16 -16 -16) (16 16 16)
