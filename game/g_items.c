@@ -2191,7 +2191,7 @@ tank commander's head
 		/* icon */		"w_blaster",
 		/* pickup */	"Pistol",
 		0,
-		0,
+		1,
 		"Bullets",
 		IT_WEAPON | IT_STAY_COOP,
 		WEAP_BLASTER,
