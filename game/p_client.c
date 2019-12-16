@@ -2050,7 +2050,7 @@ void switchToSoldier(edict_t* ent) {
 	ent->health = HEALTH_SOLDIER;
 
 	// give class weapons
-	switchWeapons(ent, "Slow Death", "Blaster", "Rocket Launcher");
+	switchWeapons(ent, "Slow Death", "Bison", "Rocket Launcher");
 }
 
 void switchToSniper(edict_t* ent) {

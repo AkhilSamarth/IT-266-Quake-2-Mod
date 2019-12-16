@@ -48,6 +48,7 @@ void Weapon_EscapePlan(edict_t* ent);
 void Weapon_Huntsman(edict_t* ent);
 void Weapon_DirectHit(edict_t* ent);
 void Weapon_StickyLauncher(edict_t* ent);
+void Weapon_Bison(edict_t* ent);
 
 // intel stuff
 // everything except pickup/submit functions are defined in p_client.c
@@ -2407,6 +2408,27 @@ tank commander's head
 		NULL,
 		0,
 		/* precache */ ""
+	},
+
+	{
+		"weapon_bison",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_Bison,
+		"misc/w_pkup.wav",
+		NULL, 0,
+		"models/weapons/v_blast/tris.md2",
+		/* icon */		"w_blaster",
+		/* pickup */	"Bison",
+		0,
+		0,
+		"Cells",
+		IT_WEAPON | IT_STAY_COOP,
+		WEAP_BLASTER,
+		NULL,
+		0,
+		/* precache */ "weapons/blastf1a.wav misc/lasfly.wav"
 	},
 
 	// =========== end of custom items for mod ===========

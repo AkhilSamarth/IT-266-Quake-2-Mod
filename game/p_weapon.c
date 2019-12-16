@@ -866,7 +866,7 @@ void Blaster_Fire(edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, int
 		speed *= 4;
 	}
 
-	fire_blaster (ent, start, forward, damage, 200, effect, hyper);
+	fire_blaster (ent, start, forward, damage, 10, effect, hyper);
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
@@ -2388,6 +2388,65 @@ void Weapon_StickyLauncher(edict_t *ent)
 	}
 
 	Weapon_Generic(ent, 5, 16, 59, 64, pause_frames, fire_frames, weapon_sticky_launcher_fire);
+}
+
+void Bison_Fire(edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, int effect)
+{
+	vec3_t	forward, right;
+	vec3_t	start;
+	vec3_t	offset;
+	int speed = 200;		// changed speed from 1000 to 200
+
+	if (is_quad)
+		damage *= 4;
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+	VectorSet(offset, 24, 8, ent->viewheight - 8);
+	VectorAdd(offset, g_offset, offset);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+
+	VectorScale(forward, -2, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -1;
+
+	damage *= 5;	// increase damage
+
+	// adjust speed for upgrade
+	if (weaponsUpgraded) {
+		speed *= 4;
+	}
+
+	fire_blaster(ent, start, forward, damage, speed, effect, hyper);
+
+	// send muzzle flash
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	if (hyper)
+		gi.WriteByte(MZ_HYPERBLASTER | is_silenced);
+	else
+		gi.WriteByte(MZ_BLASTER | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+}
+
+
+void Weapon_Bison_Fire(edict_t *ent)
+{
+	int		damage;
+
+	if (deathmatch->value)
+		damage = 15;
+	else
+		damage = 10;
+	Bison_Fire(ent, vec3_origin, damage, false, EF_BLASTER);
+	ent->client->ps.gunframe++;
+}
+
+void Weapon_Bison(edict_t *ent)
+{
+	static int	pause_frames[] = { 19, 32, 0 };
+	static int	fire_frames[] = { 5, 0 };
+
+	Weapon_Generic(ent, 4, 8, 52, 55, pause_frames, fire_frames, Weapon_Bison_Fire);
 }
 
 // ============== end of custom mod stuff ==================
