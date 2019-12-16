@@ -2428,6 +2428,12 @@ qboolean Pickup_Intel(edict_t* ent, edict_t* other) {
 	if (carryingIntel) {
 		return false;
 	}
+
+	// special particle effect on intel pickup
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_ROCKET_EXPLOSION_WATER);
+	gi.WritePosition(ent->s.origin);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
 	
 	carryingIntel = true;
 	return true;
@@ -2440,6 +2446,12 @@ qboolean Submit_Intel(edict_t* ent, edict_t* other) {
 	}
 
 	showIntelSubmitMsg = true;
+
+	// special particle effect on intel submit
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_BFG_BIGEXPLOSION);
+	gi.WritePosition(ent->s.origin);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
 
 	carryingIntel = false;
 	intelNeeded = true;
