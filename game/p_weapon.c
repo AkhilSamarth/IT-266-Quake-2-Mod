@@ -1457,7 +1457,7 @@ void Weapon_BFG (edict_t *ent)
 
 // ============== custom mod stuff ==================
 
-#define SCATTERGUN_SECOND_SHOT_DELAY 0.5	// delay between first and second shots of scattergun
+#define SCATTERGUN_SECOND_SHOT_DELAY 0.3	// delay between first and second shots of scattergun
 #define SCATTERGUN_COUNT 10			// number of projectiles fired by each scattergun shot
 #define MINIGUN_SPINUP_DELAY 0.8	// time before minigun starts firing
 #define SNIPER_SCOPE_DELAY 1		// delay between scoping and firing sniper
@@ -1473,6 +1473,9 @@ float stickyTimer = 0;	// timer for sticky launcher fuse
 qboolean pistolFired = false;	// used to make pistol semi-auto instead of automatic
 qboolean sniperScoped = false;	// checks if the sniper is currently scoped
 qboolean sniperFired = false;	// sniper has been fired and is waiting for mouse button to be released
+
+// used for weapons in which firing is controlled fully manually
+void dummy_fire(edict_t* ent) {}
 
 void weapon_scattergun_fire(edict_t *ent) {
 	vec3_t		start;
@@ -1535,11 +1538,9 @@ void Weapon_Scattergun(edict_t* ent) {
 
 	// timer for scattergun second shot
 	if (scatterGunTimer != 0 && level.time - scatterGunTimer >= SCATTERGUN_SECOND_SHOT_DELAY) {
-		// fire again if mouse button is pressed and reset the timer
-		if (ent->client->buttons & BUTTON_ATTACK) {
-			weapon_scattergun_fire(ent);
-			scatterGunTimer = 0;
-		}
+		// fire again if timer has expired
+		weapon_scattergun_fire(ent);
+		scatterGunTimer = 0;
 	}
 }
 
@@ -2066,9 +2067,6 @@ void weapon_sniper_fire(edict_t *ent)
 	if (!((int)dmflags->value & DF_INFINITE_AMMO))
 		ent->client->pers.inventory[ent->client->ammo_index]--;
 }
-
-// used for sniper, since firing is handled manually
-void dummy_fire(edict_t* ent) {}
 
 void Weapon_Sniper(edict_t *ent)
 {
