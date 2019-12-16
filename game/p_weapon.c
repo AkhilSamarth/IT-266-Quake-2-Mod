@@ -1812,7 +1812,7 @@ void weapon_SMG_fire(edict_t *ent)
 	if (!(ent->client->buttons & BUTTON_ATTACK))
 	{
 		ent->client->machinegun_shots = 0;
-		//ent->client->ps.gunframe++;	// don't want kickback after firing stops
+		ent->client->ps.gunframe++;
 		return;
 	}
 

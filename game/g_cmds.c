@@ -954,7 +954,7 @@ void Cmd_ChangeUpgrade_f(edict_t* ent) {
 // defined in g_items.c
 edict_t* Drop_Item(edict_t* ent, gitem_t* item);
 
-// command to spawn intel
+// command to spawn item
 void Cmd_Spawn_f(edict_t* ent) {
 	if (gi.argc() < 2) {
 		gi.cprintf(ent, PRINT_HIGH, "Item name not supplied.\n");
