@@ -972,6 +972,24 @@ void Cmd_Spawn_f(edict_t* ent) {
 	Drop_Item(ent, item);
 }
 
+// g_spawn.c
+void ED_CallSpawn(edict_t *ent);
+
+// spawns a generic monster
+void Cmd_SpawnMonster_f(edict_t* ent) {
+	edict_t* monster;
+
+	gi.dprintf("spawned monster");
+
+	// get the entity from g_spawn
+	monster = G_Spawn();
+	monster->classname = "monster_berserk";
+	VectorCopy(ent->s.origin, monster->s.origin);		// spawn at same location as player, but offset a little so they're not clipping
+	monster->s.origin[0] -= 100;
+
+	ED_CallSpawn(monster);
+}
+
 /*
 =================
 ClientCommand
@@ -1065,6 +1083,8 @@ void ClientCommand (edict_t *ent)
 		Cmd_ChangeUpgrade_f(ent);
 	else if (Q_stricmp(cmd, "spawn") == 0)
 		Cmd_Spawn_f(ent);
+	else if (Q_stricmp(cmd, "monster") == 0)		// command to spawn additional monsters, useful for testing/presenting
+		Cmd_SpawnMonster_f(ent);
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);
 }
