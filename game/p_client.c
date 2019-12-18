@@ -1789,13 +1789,9 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 			UpdateChaseCam(other);
 	}
 
-	// if mouse button isn't being pressed, reset minigun timer
+	// if mouse button isn't being pressed, reset minigun timer and pistolFired
 	if (!(ent->client->buttons & BUTTON_ATTACK)) {
 		minigunTimer = level.time;
-	}
-
-	// if mouse button isn't being pressed, reset pistolFired
-	if (!(ent->client->buttons & BUTTON_ATTACK)) {
 		pistolFired = false;
 	}
 
@@ -2050,7 +2046,7 @@ void switchToSoldier(edict_t* ent) {
 	ent->health = HEALTH_SOLDIER;
 
 	// give class weapons
-	switchWeapons(ent, "Slow Death", "Blaster", "Rocket Launcher");
+	switchWeapons(ent, "Slow Death", "Bison", "Rocket Launcher");
 }
 
 void switchToSniper(edict_t* ent) {
@@ -2067,6 +2063,8 @@ void switchToSniper(edict_t* ent) {
 }
 
 void switchToDemo(edict_t* ent) {
+	int grenadeIndex;
+
 	currentClass = DEMO;
 
 	setSpeed(SPEED_DEMO);
@@ -2077,6 +2075,10 @@ void switchToDemo(edict_t* ent) {
 
 	// give class weapons
 	switchWeapons(ent, "Sticky Launcher", "Direct Hit", "Grenade Launcher");
+
+	// give grenades
+	grenadeIndex = ITEM_INDEX(FindItem("grenades"));
+	ent->client->pers.inventory[grenadeIndex] = 50;
 }
 
 // defined in g_items.c

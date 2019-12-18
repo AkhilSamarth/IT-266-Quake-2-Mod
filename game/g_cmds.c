@@ -954,7 +954,7 @@ void Cmd_ChangeUpgrade_f(edict_t* ent) {
 // defined in g_items.c
 edict_t* Drop_Item(edict_t* ent, gitem_t* item);
 
-// command to spawn intel
+// command to spawn item
 void Cmd_Spawn_f(edict_t* ent) {
 	if (gi.argc() < 2) {
 		gi.cprintf(ent, PRINT_HIGH, "Item name not supplied.\n");
@@ -970,6 +970,24 @@ void Cmd_Spawn_f(edict_t* ent) {
 	}
 
 	Drop_Item(ent, item);
+}
+
+// g_spawn.c
+void ED_CallSpawn(edict_t *ent);
+
+// spawns a generic monster
+void Cmd_SpawnMonster_f(edict_t* ent) {
+	edict_t* monster;
+
+	gi.dprintf("spawned monster");
+
+	// get the entity from g_spawn
+	monster = G_Spawn();
+	monster->classname = "monster_berserk";
+	VectorCopy(ent->s.origin, monster->s.origin);		// spawn at same location as player, but offset a little so they're not clipping
+	monster->s.origin[0] -= 100;
+
+	ED_CallSpawn(monster);
 }
 
 /*
@@ -1065,6 +1083,8 @@ void ClientCommand (edict_t *ent)
 		Cmd_ChangeUpgrade_f(ent);
 	else if (Q_stricmp(cmd, "spawn") == 0)
 		Cmd_Spawn_f(ent);
+	else if (Q_stricmp(cmd, "monster") == 0)		// command to spawn additional monsters, useful for testing/presenting
+		Cmd_SpawnMonster_f(ent);
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);
 }

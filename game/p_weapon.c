@@ -847,7 +847,6 @@ void Blaster_Fire(edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, int
 	vec3_t	forward, right;
 	vec3_t	start;
 	vec3_t	offset;
-	int speed = 200;		// changed speed from 1000 to 200
 
 	if (is_quad)
 		damage *= 4;
@@ -859,46 +858,36 @@ void Blaster_Fire(edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, int
 	VectorScale(forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
 
-	damage *= 5;	// double original blaster damage
-
-	// adjust speed for upgrade
-	if (weaponsUpgraded) {
-		speed *= 4;
-	}
-
-	fire_blaster (ent, start, forward, damage, 200, effect, hyper);
+	fire_blaster(ent, start, forward, damage, 50, effect, hyper);		// much lower speed than original
 
 	// send muzzle flash
-	gi.WriteByte (svc_muzzleflash);
-	gi.WriteShort (ent-g_edicts);
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
 	if (hyper)
-		gi.WriteByte (MZ_HYPERBLASTER | is_silenced);
+		gi.WriteByte(MZ_HYPERBLASTER | is_silenced);
 	else
-		gi.WriteByte (MZ_BLASTER | is_silenced);
-	gi.multicast (ent->s.origin, MULTICAST_PVS);
+		gi.WriteByte(MZ_BLASTER | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
 
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 }
 
 
-void Weapon_Blaster_Fire (edict_t *ent)
+void Weapon_Blaster_Fire(edict_t *ent)
 {
 	int		damage;
 
-	if (deathmatch->value)
-		damage = 15;
-	else
-		damage = 10;
-	Blaster_Fire (ent, vec3_origin, damage, false, EF_BLASTER);
+	damage = 2;		// much lower damage than original
+	Blaster_Fire(ent, vec3_origin, damage, false, EF_BLASTER);
 	ent->client->ps.gunframe++;
 }
 
-void Weapon_Blaster (edict_t *ent)
+void Weapon_Blaster(edict_t *ent)
 {
-	static int	pause_frames[]	= {19, 32, 0};
-	static int	fire_frames[]	= {5, 0};
+	static int	pause_frames[] = { 19, 32, 0 };
+	static int	fire_frames[] = { 5, 0 };
 
-	Weapon_Generic (ent, 4, 8, 52, 55, pause_frames, fire_frames, Weapon_Blaster_Fire);
+	Weapon_Generic(ent, 4, 8, 52, 55, pause_frames, fire_frames, Weapon_Blaster_Fire);
 }
 
 
@@ -1468,7 +1457,7 @@ void Weapon_BFG (edict_t *ent)
 
 // ============== custom mod stuff ==================
 
-#define SCATTERGUN_SECOND_SHOT_DELAY 0.5	// delay between first and second shots of scattergun
+#define SCATTERGUN_SECOND_SHOT_DELAY 0.3	// delay between first and second shots of scattergun
 #define SCATTERGUN_COUNT 10			// number of projectiles fired by each scattergun shot
 #define MINIGUN_SPINUP_DELAY 0.8	// time before minigun starts firing
 #define SNIPER_SCOPE_DELAY 1		// delay between scoping and firing sniper
@@ -1484,6 +1473,9 @@ float stickyTimer = 0;	// timer for sticky launcher fuse
 qboolean pistolFired = false;	// used to make pistol semi-auto instead of automatic
 qboolean sniperScoped = false;	// checks if the sniper is currently scoped
 qboolean sniperFired = false;	// sniper has been fired and is waiting for mouse button to be released
+
+// used for weapons in which firing is controlled fully manually
+void dummy_fire(edict_t* ent) {}
 
 void weapon_scattergun_fire(edict_t *ent) {
 	vec3_t		start;
@@ -1546,11 +1538,9 @@ void Weapon_Scattergun(edict_t* ent) {
 
 	// timer for scattergun second shot
 	if (scatterGunTimer != 0 && level.time - scatterGunTimer >= SCATTERGUN_SECOND_SHOT_DELAY) {
-		// fire again if mouse button is pressed and reset the timer
-		if (ent->client->buttons & BUTTON_ATTACK) {
-			weapon_scattergun_fire(ent);
-			scatterGunTimer = 0;
-		}
+		// fire again if timer has expired
+		weapon_scattergun_fire(ent);
+		scatterGunTimer = 0;
 	}
 }
 
@@ -1703,7 +1693,7 @@ void weapon_pistol_fire(edict_t *ent)
 	int			kick = 2;
 	vec3_t		offset;
 	const int upgradeBulletCount = 3;		// how many bullets to fire in a single shot when upgraded
-
+	
 	// if pistol has been fired, don't fire again until boolean is reset
 	if (pistolFired) {
 		return;
@@ -1715,7 +1705,7 @@ void weapon_pistol_fire(edict_t *ent)
 	if (!(ent->client->buttons & BUTTON_ATTACK))
 	{
 		ent->client->machinegun_shots = 0;
-		//ent->client->ps.gunframe++;	don't want kickback when firing stops
+		ent->client->ps.gunframe++;
 		return;
 	}
 	
@@ -1822,7 +1812,7 @@ void weapon_SMG_fire(edict_t *ent)
 	if (!(ent->client->buttons & BUTTON_ATTACK))
 	{
 		ent->client->machinegun_shots = 0;
-		//ent->client->ps.gunframe++;	// don't want kickback after firing stops
+		ent->client->ps.gunframe++;
 		return;
 	}
 
@@ -2078,9 +2068,6 @@ void weapon_sniper_fire(edict_t *ent)
 		ent->client->pers.inventory[ent->client->ammo_index]--;
 }
 
-// used for sniper, since firing is handled manually
-void dummy_fire(edict_t* ent) {}
-
 void Weapon_Sniper(edict_t *ent)
 {
 	// FOVs for normal and upgraded sniper
@@ -2257,10 +2244,10 @@ void weapon_huntsman_fire(edict_t *ent)
 
 void Weapon_Huntsman(edict_t *ent)
 {
-	static int	pause_frames[] = { 56, 0 };
-	static int	fire_frames[] = { 4, 0 };
+	static int	pause_frames[] = { 0 };
+	static int	fire_frames[] = { 6, 0 };
 
-	Weapon_Generic(ent, 3, 18, 56, 61, pause_frames, fire_frames, weapon_huntsman_fire);
+	Weapon_Generic(ent, 5, 20, 49, 53, pause_frames, fire_frames, weapon_huntsman_fire);
 }
 
 void weapon_directhit_fire(edict_t *ent)
@@ -2317,10 +2304,10 @@ void weapon_directhit_fire(edict_t *ent)
 
 void Weapon_DirectHit(edict_t *ent)
 {
-	static int	pause_frames[] = { 34, 51, 59, 0 };
-	static int	fire_frames[] = { 6, 0 };
+	static int	pause_frames[] = { 56, 0 };
+	static int	fire_frames[] = { 4, 0 };
 
-	Weapon_Generic(ent, 5, 16, 59, 64, pause_frames, fire_frames, weapon_directhit_fire);
+	Weapon_Generic(ent, 3, 18, 56, 61, pause_frames, fire_frames, weapon_directhit_fire);
 }
 
 void weapon_sticky_launcher_fire(edict_t *ent)
@@ -2379,15 +2366,74 @@ void weapon_sticky_launcher_fire(edict_t *ent)
 
 void Weapon_StickyLauncher(edict_t *ent)
 {
-	static int	pause_frames[] = { 34, 51, 59, 0 };
-	static int	fire_frames[] = { 6, 0 };
+	static int	pause_frames[] = { 0 };
+	static int	fire_frames[] = { 6, 0};
 
 	// if sticky timer has exceeded sticky detonation time, reset it to 0
 	if ((level.time - stickyTimer) >= STICKY_DETONATION) {
 		stickyTimer = 0;
 	}
 
-	Weapon_Generic(ent, 5, 16, 59, 64, pause_frames, fire_frames, weapon_sticky_launcher_fire);
+	Weapon_Generic(ent, 5, 20, 49, 53, pause_frames, fire_frames, weapon_sticky_launcher_fire);
+}
+
+void Bison_Fire(edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, int effect)
+{
+	vec3_t	forward, right;
+	vec3_t	start;
+	vec3_t	offset;
+	int speed = 200;		// changed speed from 1000 to 200
+
+	if (is_quad)
+		damage *= 4;
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+	VectorSet(offset, 24, 8, ent->viewheight - 8);
+	VectorAdd(offset, g_offset, offset);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+
+	VectorScale(forward, -2, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -1;
+
+	damage *= 5;	// increase damage
+
+	// adjust speed for upgrade
+	if (weaponsUpgraded) {
+		speed *= 4;
+	}
+
+	fire_blaster(ent, start, forward, damage, speed, effect, hyper);
+
+	// send muzzle flash
+	gi.WriteByte(svc_muzzleflash);
+	gi.WriteShort(ent - g_edicts);
+	if (hyper)
+		gi.WriteByte(MZ_HYPERBLASTER | is_silenced);
+	else
+		gi.WriteByte(MZ_BLASTER | is_silenced);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+}
+
+
+void Weapon_Bison_Fire(edict_t *ent)
+{
+	int		damage;
+
+	if (deathmatch->value)
+		damage = 15;
+	else
+		damage = 10;
+	Bison_Fire(ent, vec3_origin, damage, false, EF_BLASTER);
+	ent->client->ps.gunframe++;
+}
+
+void Weapon_Bison(edict_t *ent)
+{
+	static int	pause_frames[] = { 19, 32, 0 };
+	static int	fire_frames[] = { 5, 0 };
+
+	Weapon_Generic(ent, 4, 8, 52, 55, pause_frames, fire_frames, Weapon_Bison_Fire);
 }
 
 // ============== end of custom mod stuff ==================
